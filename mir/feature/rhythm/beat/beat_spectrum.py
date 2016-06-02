@@ -10,9 +10,9 @@
 """
 
 import scipy as sp
-from plifia.signal.spectral import *
-from plifia.mir.feature.structure import *
-from plifia.mir.feature import *
+from pylufia.signal.spectral import *
+from pylufia.mir.feature.structure import *
+from pylufia.mir.feature import *
 import functools
 import itertools
 import time

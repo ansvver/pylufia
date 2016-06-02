@@ -9,8 +9,8 @@
 
 """
 
-from plifia.signal.segment import *
-from plifia.mir.feature.common import *
+from pylufia.signal.segment import *
+from ..mir.feature.common import *
 import scipy as sp
 
 

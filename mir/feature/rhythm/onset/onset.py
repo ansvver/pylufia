@@ -10,10 +10,10 @@
 """
 
 import scipy as sp
-from plifia.mir.feature.timbre import *
-from plifia.signal import *
-from plifia.signal.moving_average import moving_average_exp_cy
-from plifia.signal.spectral import *
+from pylufia.mir.feature.timbre import *
+from pylufia.signal import *
+from pylufia.signal.moving_average import moving_average_exp_cy
+from pylufia.signal.spectral import *
 
 
 def onset(input, framesize=1024, hopsize=512, fs=44100, method='mfcc'):

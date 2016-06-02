@@ -10,7 +10,7 @@
 """
 
 import scipy as sp
-from plifia.signal.segment import *
+from pylufia.signal.segment import *
 
 
 def fft(x, fftsize=512):

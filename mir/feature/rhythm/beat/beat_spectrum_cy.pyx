@@ -14,12 +14,12 @@ import numpy as np
 cimport numpy as np
 from scipy import interpolate
 
-from plifia.signal.spectral import *
-from plifia.mir.feature.structure import *
-from plifia.mir.feature.spectral import *
-from plifia.mir.feature.common import *
-import plifia.signal.filter as filter
-import plifia.signal as signal
+from pylufia.signal.spectral import *
+from pylufia.mir.feature.structure import *
+from pylufia.mir.feature.spectral import *
+from pylufia.mir.feature.common import *
+import pylufia.signal.filter as filter
+import pylufia.signal as signal
 
 import itertools
 import time

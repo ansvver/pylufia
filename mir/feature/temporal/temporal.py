@@ -11,8 +11,8 @@
 
 import scipy as sp
 import scipy.signal as sig
-from plifia.signal import *
-from plifia.mir.feature.rhythm import *
+from pylufia.signal import *
+from pylufia.mir.feature.rhythm import *
 
 
 def zerocross_rate(input):

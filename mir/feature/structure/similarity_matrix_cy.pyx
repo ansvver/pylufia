@@ -13,7 +13,7 @@ import cython
 import numpy as np
 cimport numpy as np
 import numpy.linalg as linalg
-from plifia.stats.distance import *
+from pylufia.stats.distance import *
 
 
 def similarity_matrix_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y, metric='cos'):

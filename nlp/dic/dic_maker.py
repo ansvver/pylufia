@@ -9,8 +9,8 @@
 テキストファイル集合からbag-of-words構築用辞書を作成する
 """
 
-import plifia.nlp.textio as textio
-import plifia.nlp.feature as feature
+import pylufia.nlp.textio as textio
+import pylufia.nlp.feature as feature
 import re
 
 

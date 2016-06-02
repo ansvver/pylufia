@@ -13,7 +13,7 @@ import numpy as np
 cimport numpy as np
 import scipy.linalg as linalg
 import scipy.misc as spmisc
-from plifia.stats.cluster import *
+from pylufia.stats.cluster import *
 
 
 EPS = np.finfo(float).eps

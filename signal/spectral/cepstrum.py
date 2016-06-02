@@ -10,7 +10,7 @@
 """
 
 import scipy as sp
-from plifia.signal.common import *
+from pylufia.signal.common import *
 from fft import *
 
 

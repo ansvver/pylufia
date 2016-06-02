@@ -15,7 +15,7 @@ M.D.Hoffman, ''Bayesian Nonparametric Matrix Factorization for Recorded Music''
 cimport cython
 import numpy as np
 cimport numpy as np
-from plifia.stats import GIG_cy
+from pylufia.stats import GIG_cy
 
 import time
 

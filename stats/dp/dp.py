@@ -11,7 +11,7 @@
 
 import scipy as sp
 import scipy.spatial.distance as spdist
-import plifia.stats.distance as distance
+import pylufia.stats.distance as distance
 
 
 def dp_match(seq1, seq2):

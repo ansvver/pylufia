@@ -12,7 +12,7 @@
 import cython
 import numpy as np
 cimport numpy as np
-import plifia.stats.distance as distance
+import pylufia.stats.distance as distance
 
 
 def kmeans_cy(features, n_clusters=2, max_iter=100, init="pp"):

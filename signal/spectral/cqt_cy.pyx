@@ -16,7 +16,7 @@ import scipy as sp
 import time
 
 from fft import *
-from plifia.signal import *
+from pylufia.signal import *
 
 
 cdef make_cqt_kernels_cy(int framesize, float fs, int n_cq, int n_per_semitone, float fmin, int n_wavs=30):

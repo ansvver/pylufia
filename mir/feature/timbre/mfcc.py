@@ -2,8 +2,8 @@
 
 import scipy as sp
 from scipy.fftpack.realtransforms import dct
-from plifia.signal.spectral import *
-from plifia.mir.feature import *
+from pylufia.signal.spectral import *
+from pylufia.mir.feature import *
 
 
 def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):

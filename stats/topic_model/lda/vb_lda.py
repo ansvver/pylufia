@@ -11,7 +11,7 @@
 
 import scipy as sp
 import scipy.special
-from celes.stats.common import digamma,trigamma
+from pylufia.stats.common import digamma,trigamma
 import itertools
 
 import time

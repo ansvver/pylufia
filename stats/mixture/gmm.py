@@ -12,7 +12,7 @@
 from ..prob_dists import MultiGauss
 import scipy as sp
 import scipy.misc as spmisc
-from plifia.stats.cluster import *
+from pylufia.stats.cluster import *
 
 import scipy.linalg as linalg
 

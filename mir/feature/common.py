@@ -9,7 +9,7 @@
 
 """
 
-import plifia.signal as signal
+import pylufia.signal as signal
 import scipy as sp
 
 

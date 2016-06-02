@@ -13,7 +13,7 @@ M.D.Hoffman, ''Bayesian Nonparametric Matrix Factorization for Recorded Music''
 """
 
 import scipy as sp
-from plifia.stats import GIG_cy
+from pylufia.stats import GIG_cy
 
 
 class GaPNMF():

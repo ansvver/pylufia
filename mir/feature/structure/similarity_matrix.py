@@ -10,7 +10,7 @@
 """
 
 import scipy as sp
-from plifia.stats.distance import *
+from pylufia.stats.distance import *
 
 
 def similarity_matrix(X, Y, metric='euclid'):

@@ -10,8 +10,8 @@
 """
 
 import scipy as sp
-from plifia.signal.spectral import *
-from plifia.mir.feature.common import *
+from pylufia.signal.spectral import *
+from pylufia.mir.feature.common import *
 
 
 def dim_reduced_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window='hann', max_freq=22050, n_dims=88):

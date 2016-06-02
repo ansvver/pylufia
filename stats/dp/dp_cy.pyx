@@ -13,7 +13,7 @@ import cython
 import numpy as np
 cimport numpy as np
 import scipy.spatial.distance as spdist
-import plifia.stats.distance as distance
+import pylufia.stats.distance as distance
 
 
 def dp_match_cy(seq1, seq2):

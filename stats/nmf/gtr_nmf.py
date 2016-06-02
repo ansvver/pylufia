@@ -10,7 +10,7 @@
 """
 
 import scipy as sp
-from plifia.stats import Gamma
+from pylufia.stats import Gamma
 
 import time
 

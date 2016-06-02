@@ -10,7 +10,7 @@
 """
 
 import scipy as sp
-from plifia.signal.spectral import *
+from pylufia.signal.spectral import *
 
 
 def _make_bark_filterbank(fs, framesize):

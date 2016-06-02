@@ -7,10 +7,10 @@ Pitch feature extractors
 """
 
 import scipy as sp
-from plifia.mir.feature.common import *
-from plifia.signal import *
-from plifia.signal.spectral import *
-from plifia.stats.distance import *
+from pylufia.mir.feature.common import *
+from pylufia.signal import *
+from pylufia.signal.spectral import *
+from pylufia.stats.distance import *
 
 
 def pitch(input, framesize=8192, hopsize=220, fs=44100):
