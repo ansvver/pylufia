@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-@file whiten.py
-@brief whiten functions for clustering
-@author ふぇいと (@stfate)
+============================================================
+@file   whiten.py
+@date   2012/06/29
+@author sasai
 
-@description
+@brief  clustering functions
 
+============================================================
 """
 
 import scipy as sp

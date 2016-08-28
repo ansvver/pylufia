@@ -8,6 +8,3 @@
 @description
 
 """
-
-def func():
-    pass

@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file beta_nmf.py
-@brief Beta-divergence NMF
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import scipy as sp
 
 
@@ -39,8 +30,8 @@ def beta_nmf(X, b=1.0, n_basis=10, n_iter=100, show_div=True, Winit=None):
     prevD = 1e100
     phiB = _calcPhi(b)
     
-    for it in xrange(n_iter):
-        # print it
+    for it in range(n_iter):
+        # print(it)
         WH = sp.dot(W,H)
         W *= (sp.dot( X * (WH**(b-2)), H.T ) / sp.dot(WH**(b-1), H.T))**phiB
         # W /= (W**2).sum(0) + 0.0000001
@@ -52,7 +43,7 @@ def beta_nmf(X, b=1.0, n_basis=10, n_iter=100, show_div=True, Winit=None):
             WH = sp.dot(W,H)
             prevD = D
             D = _calcBetaDivergence(WH, X, b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
         # if it > 10 and D > prevD:
             # break
@@ -73,7 +64,7 @@ def beta_nmf_activation(X, W, b=1.0, n_iter=100, show_div=True):
     prevD = 1e100
     phiB = _calcPhi(b)
     
-    for it in xrange(n_iter):
+    for it in range(n_iter):
         WH = sp.dot(W,H)
         H *= (sp.dot( W.T, X * (WH**(b-2))) / (SPARSENESS + sp.dot(W.T, WH**(b-1))))**phiB
         # H /= H.max()
@@ -82,7 +73,7 @@ def beta_nmf_activation(X, W, b=1.0, n_iter=100, show_div=True):
             WH = sp.dot(W,H)
             prevD = D
             D = _calcBetaDivergence(WH, X, b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         # if it > 10 and D > prevD:
             # break
         
@@ -115,7 +106,7 @@ def beta_nmf_activation_other(X, W, b=1.0, n_iter=100, n_basis_undesired=20, sho
     mu = 1e6
     phiB = _calcPhi(b)
     
-    for it in xrange(n_iter):
+    for it in range(n_iter):
         WH = sp.dot(W,H) + sp.dot(Wu,Hu)
         H *= (sp.dot( W.T, X * (WH**(b-2))) / (SPARSENESS + sp.dot(W.T, WH**(b-1))))**phiB
         WH = sp.dot(W,H) + sp.dot(Wu,Hu)
@@ -130,7 +121,7 @@ def beta_nmf_activation_other(X, W, b=1.0, n_iter=100, n_basis_undesired=20, sho
             WH = sp.dot(W,H) + sp.dot(Wu,Hu)
             prevD = D
             D = _calcBetaDivergence(WH, X, b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
     return H,Wu,Hu
     
@@ -161,7 +152,7 @@ def beta_nmf_activation_hp(X, Wh, Wp, b=1.0, n_iter=100, show_div=True):
     prevD = 1e100
     phiB = _calcPhi(b)
     
-    for it in xrange(n_iter):
+    for it in range(n_iter):
         WH = sp.dot(Wh,Hh) + sp.dot(Wp,Hp)
         Hh *= (sp.dot( Wh.T, X * (WH**(b-2))) / (SPARSENESS + sp.dot(Wh.T, WH**(b-1))))**phiB
         Hh /= Hh.max()
@@ -206,8 +197,8 @@ def beta_nmf_activation_multiclass(X, Wc, b=1.0, n_iter=100, show_div=True):
     prevD = 1e100
     phiB = _calcPhi(b)
     
-    for it in xrange(n_iter):
-        for c in xrange(n_class):
+    for it in range(n_iter):
+        for c in range(n_class):
             WH = computeWH(Wc,Hc)
             Hc[c] *= (sp.dot( Wc[c].T, X * (WH**(b-2))) / (SPARSENESS + sp.dot(Wc[c].T, WH**(b-1))))**phiB
             # Hc[c] *= (sp.dot( Wc[c].T, X * (WH**(b-2))) / sp.dot(Wc[c].T, WH**(b-1)))*phiB
@@ -217,7 +208,7 @@ def beta_nmf_activation_multiclass(X, Wc, b=1.0, n_iter=100, show_div=True):
             WH = computeWH(Wc,Hc)
             prevD = D
             D = _calcBetaDivergence(WH, X, b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
     return Hc
 

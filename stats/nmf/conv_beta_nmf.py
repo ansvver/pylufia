@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-@file conv_beta_nmf.py
-@brief Convolutive NMF (beta-divergence)
-@author ふぇいと (@stfate)
-
-@description
-
+Convolutive NMF (beta-divergence)
 """
 
 import scipy as sp
-
 
 def conv_beta_nmf(X, n_basis, b=1.0, T=8, n_iter=100, show_div=True, Winit=None):
     """
@@ -26,21 +20,21 @@ def conv_beta_nmf(X, n_basis, b=1.0, T=8, n_iter=100, show_div=True, Winit=None)
     Hcand = (sp.rand(T, n_basis, nT) + 10) * X.mean()
     phiB = _calcPhi(b)
 
-    for i in xrange(n_iter):
+    for i in range(n_iter):
         # W[t]をすべて更新
         WH = computeWH(W, H)
-        for t in xrange(T):
+        for t in range(T):
             W[t] *= (sp.dot(X/(WH**(2-b)), _rshift(H,t).T) / sp.dot(WH**(b-1), _rshift(H,t).T))**phiB
         # すべてのtに対してそれぞれ更新されたHを求め平均する
         WH = computeWH(W, H)
-        for t in xrange(T):
+        for t in range(T):
             Hcand[t] = H * (sp.dot(W[t].T, _lshift(X / (WH**(2-b)),t)) / (SPARSENESS + sp.dot(W[t].T, _lshift(WH,t)**(b-1))))**phiB
         H = Hcand.mean(0)
         
         if show_div:
             WH = computeWH(W, H)
             D = _calcBetaDivergence(X, WH, b)
-            print 'Beta-divergence={0}'.format(D)
+            print( 'Beta-divergence={0}'.format(D) )
 
     return W,H
 
@@ -50,7 +44,7 @@ def computeWH(W, H):
     """
     T = W.shape[0]
     Y = sp.zeros( (W.shape[1],H.shape[1]) )
-    for t in xrange(T):
+    for t in range(T):
         Y += sp.dot(W[t], _rshift(H, t))
 
     return Y
@@ -69,16 +63,16 @@ def conv_beta_nmf_activation(X, W, b=1.0, n_iter=100, show_div=True):
     Hcand = sp.rand(T, n_basis, nT)
     phiB = _calcPhi(b)
 
-    for i in xrange(n_iter):
+    for i in range(n_iter):
         WH = computeWH(W, H)
-        for t in xrange(T):
+        for t in range(T):
             Hcand[t] = H * (sp.dot(W[t].T, _lshift(X / (WH**(2-b)),t)) / (SPARSENESS + sp.dot(W[t].T, _lshift(WH,t)**(b-1))))**phiB
         H = Hcand.mean(0)
         
         if show_div:
             WH = computeWH(W, H)
             D = _calcBetaDivergence(X, WH, b)
-            print 'Beta-divergence={0}'.format(D)
+            print( 'Beta-divergence={0}'.format(D) )
 
     return H
 
@@ -99,11 +93,11 @@ def conv_beta_nmf_activation_multiclass(X, Wc, b=1.0, n_iter=100, show_div=True)
     Hcand = sp.rand(T, n_basis, nT)
     phiB = _calcPhi(b)
 
-    for i in xrange(n_iter):
-        for c in xrange(len(Wc)):
+    for i in range(n_iter):
+        for c in range(len(Wc)):
             # WH = computeWH(W[c], Hc[c])
             WH = computeMulticlassWH(Wc, Hc)
-            for t in xrange(T):
+            for t in range(T):
                 Hcand[t] = Hc[c] * (sp.dot(Wc[c][t].T, _lshift(X / (WH**(2-b)),t)) / (SPARSENESS + sp.dot(Wc[c][t].T, _lshift(WH,t)**(b-1))))**phiB
             Hc[c] = Hcand.mean(0)
             
@@ -111,14 +105,14 @@ def conv_beta_nmf_activation_multiclass(X, Wc, b=1.0, n_iter=100, show_div=True)
         if show_div:
             WH = computeMulticlassWH(Wc, Hc)
             D = _calcBetaDivergence(X, WH, b)
-            print 'Beta-divergence={0}'.format(D)
+            print( 'Beta-divergence={0}'.format(D) )
 
     return Hc
 
 def computeMulticlassWH(Wc, Hc):
     WH = sp.zeros( (Wc[0].shape[1],Hc[0].shape[1]) )
 
-    for c in xrange(len(Wc)):
+    for c in range(len(Wc)):
         WH += computeWH(Wc[c], Hc[c])
 
     return WH

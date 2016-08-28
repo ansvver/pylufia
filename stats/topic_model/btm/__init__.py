@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file __init__.py
-@brief __init__ of stats.topic_model.btm
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
-from btm import *
+from .btm import *
 
 # import pyximport
 # import os

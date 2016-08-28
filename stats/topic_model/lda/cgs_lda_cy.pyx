@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-@file cgs_lda_cy.pyx
-@brief Collapsed Gibbs Sampling LDA (cython version)
-@author ふぇいと (@stfate)
+cgs_lda_cy.pyx
 
-@description
-Collapsed Gibbs SamplingによるLDA
+Collapsed Gibbs SamplingによるLDA(Cython実装)
 """
 
 cimport cython
 import numpy as np
 cimport numpy as np
-import scipy.sparse as sparse
-import cPickle
+import scipy.sparse as sp_sparse
 
 import time #perfmeas
 
@@ -39,18 +35,21 @@ class CGSLDA_cy():
         self.alpha = alpha
         self.beta = beta
 
-        # self.phi = np.zeros( (self.n_topics,self.n_words), dtype=np.double )
-        self.phi = sparse.lil_matrix( (self.n_topics,self.n_words), dtype=np.double )
+        self.phi = np.zeros( (self.n_topics,self.n_words), dtype=np.double )
         self.phi_history = []
-        # self.theta = np.zeros( (self.n_docs,self.n_topics), dtype=np.double )
-        self.theta = sparse.lil_matrix( (self.n_docs,self.n_topics), dtype=np.double )
+        self.theta = np.zeros( (self.n_docs,self.n_topics), dtype=np.double )
         self.theta_history = []
         self.history_size = 200
         self.topics = np.zeros( (self.n_docs,self.n_words), dtype=np.int32 )
+        # self.topics = sp.sparse.lil_matrix( (self.n_docs,self.n_words), dtype=np.int32 )
         self.n_kw = np.zeros( (self.n_topics,self.n_words), dtype=np.int32 )
+        # self.n_kw = sp.sparse.lil_matrix( (self.n_topics,self.n_words), dtype=np.int32 )
         self.n_k = np.zeros(self.n_topics, dtype=np.int32)
+        # self.n_k = sp.sparse.lil_matrix(self.n_topics, dtype=np.int32)
         self.n_dk = np.zeros( (self.n_docs,self.n_topics), dtype=np.int32 )
+        # self.n_dk = sp.sparse.lil_matrix( (self.n_docs,self.n_topics), dtype=np.int32 )
         self.n_d = np.zeros(self.n_docs, dtype=np.int32)
+        # self.n_d = sp.sparse.lil_matrix(self.n_docs, dtype=np.int32)
         self.W = 0
 
     def _initialize_parameters(self):
@@ -76,17 +75,27 @@ class CGSLDA_cy():
     def infer(self, n_iter=100):
         self._initialize_parameters()
 
+        P_arr = np.zeros(n_iter, dtype=float)
         for it in range(n_iter):
+            st = time.clock() #perfmeas
+
             self._update_counters()
+
+            ed = time.clock() #perfmeas
+            print( "PROCTIME for updateCounters()={}sec".format(ed-st) ) #perfmeas
+
+            st = time.clock() #perfmeas
+
             self._update_parameters()
 
-            P = self.perplexity(self.documents)
-            print 'iterates: {} perplexity={}'.format(it,P)
+            ed = time.clock() #perfmeas
+            print( "PROCTIME for updateParameters()={}sec".format(ed-st) ) #perfmeas
 
-        self.phi = np.array(self.phi_history).mean(0)
-        self.phi_history = []
-        self.theta = np.array(self.theta_history).mean(0)
-        self.theta_history = []
+            P = self.perplexity(self.documents)
+            P_arr[it] = P
+            print( 'iterates: {} perplexity={}'.format(it,P) )
+
+        return P_arr
 
     def _update_counters(self):
         cdef int d,w,k,new_k,dw
@@ -123,8 +132,8 @@ class CGSLDA_cy():
         self.phi = (self.n_kw + self.beta) / (self.n_k[:,np.newaxis] + self.W * self.beta)
         self.theta = (self.n_dk + self.alpha) / (self.n_d[:,np.newaxis] + self.n_topics * self.alpha)
 
-        self._push_value_to_history(self.phi_log, self.phi)
-        self._push_value_to_history(self.theta_log, self.theta)
+        self._push_value_to_history(self.phi_history, self.phi)
+        self._push_value_to_history(self.theta_history, self.theta)
 
     def predict_topic_prob_old(self, document):
         """
@@ -190,7 +199,7 @@ class CGSLDA_cy():
 
             #phi = (self.n_kw + n_kw_new + self.beta) / (self.n_k[:,np.newaxis] + n_k_new[:,np.newaxis] + self.W * self.beta)
             theta = (n_dk_new + self.alpha) / (n_d_new + self.n_topics * self.alpha)
-            self._push_value_to_history(theta_log, theta)
+            self._pushValueToLog(theta_log, theta)
 
             
         #P = self.perplexity_for_new_document(document, theta, phi)
@@ -200,10 +209,12 @@ class CGSLDA_cy():
         return theta_final
 
     def get_topic_word_dist(self):
-        return self.phi
+        # return self.phi
+        return np.array(self.phi_history[-100:]).mean(0)
 
     def get_topic_dist(self):
-        return self.theta
+        # return self.theta
+        return np.array(self.theta_history[-100:]).mean(0)
 
     def get_document_topic_dist(self, d):
         return self.theta[d]
@@ -216,10 +227,9 @@ class CGSLDA_cy():
         for d in xrange(n_docs):
             words_exist_idx = np.where(documents[d] > 0)[0]
             for w in words_exist_idx:
-                # theta_phi_sum = 0.0
-                # for k in xrange(self.n_topics):
-                    # theta_phi_sum += self.theta[d,k] * self.phi[k,w]
-                theta_phi_sum = (self.theta[d,:] * self.phi[np.newaxis,:,w]).sum()
+                theta_phi_sum = 0.0
+                for k in xrange(self.n_topics):
+                    theta_phi_sum += self.theta[d,k] * self.phi[k,w]
                 perplexity -= np.log(theta_phi_sum)
 
         perplexity = np.exp(1/float(N) * perplexity)

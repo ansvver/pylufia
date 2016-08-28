@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-@file common.py
-@brief common functions of tonal extractors
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Common functions for feature extractors
+====================================================================
 """
 
 import pylufia.signal as signal
+import pylufia.signal.filter.iir as iir
+import pylufia.signal.moving_average as ma
 import scipy as sp
+import scipy.signal as sp_sig
 
 
 def envelope(input):
@@ -26,15 +26,15 @@ def envelope(input):
       result: ndarray
         envelope signal
     """
-    b, a = iirCalcCoef(2.0, 4000.0, 3.0, 'lpf2')
-    fil_data = iirApply(input)
+    b, a = iir.calc_coef(2.0, 4000.0, 3.0, 'lpf2')
+    fil_data = iir.apply(input)
 
-    env_data = abs(sig.hilbert(fil_data))
-    env_data2 = calcEMA(env_data, 256)
+    env_data = abs( sp_sig.hilbert(fil_data) )
+    env_data2 = ma.moving_average_exp(env_data, 256)
 
     return env_data2
 
-def flatnessDB(input):
+def flatness_db(input):
     """
     Calculate flatness
     

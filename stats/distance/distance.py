@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file distance.py
-@brief distance calculation functions
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+distance calculation functions
+====================================================================
 """
 
 import scipy as sp
 import scipy.linalg as linalg
-
 
 def euclid_dist(x, y):
     """
@@ -43,7 +39,7 @@ def euclid_dist_2d(X, Y):
       result: double
         euclid distance for (X,Y)
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
     d = sp.mean([euclid_dist(x, y) for x, y in zip(RX, RY)])
     
@@ -91,7 +87,7 @@ def cos_dist_2d(X, Y):
       result: double
         cosine distance for (X,Y)
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
     d = sp.mean([cos_dist(x, y) for x, y in zip(RX, RY)])
 
@@ -134,19 +130,19 @@ def corrcoef_2d(X, Y):
     """
     相関係数(2次元arrayに対する)
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     d = sp.mean( [corrcoef(x, y) for x,y in zip(RX,RY)] )
     return d
 
 def corrcoef_2d_T(X, Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     RX = RX.T
     RY = RY.T
     d = sp.mean( [corrcoef(x, y) for x,y in zip(RX,RY)] )
     return d
 
 def weighted_corrcoef_2d(X, Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     weight = (RX+RY).sum(1)
     weight /= weight.sum()
     d = sp.mean( [corrcoef(x, y)*weight[i] for i,(x,y) in enumerate(zip(RX,RY))] )
@@ -175,14 +171,14 @@ def dtw_dist_2d(X, Y):
     dist_func = sp.spatial.distance.cosine
 
     D[0, 0] = dist_func(X[0, :], Y[0, :])
-    for i in xrange(1, X.shape[0]):
+    for i in range(1, X.shape[0]):
         D[i, 0] = dist_func(X[i, :], Y[0, :]) + D[i-1, 0]
 
-    for j in xrange(1, Y.shape[0]):
+    for j in range(1, Y.shape[0]):
         D[0, j] = dist_func(X[0, :], Y[j, :]) + D[0, j-1]
 
-    for i in xrange(1, X.shape[0]):
-        for j in xrange(1, Y.shape[0]):
+    for i in range(1, X.shape[0]):
+        for j in range(1, Y.shape[0]):
             D[i, j] = dist_func(X[i, :], Y[j, :]) + min(D[i-1, j], D[i, j-1], D[i-1, j-1])
 
     return D[-1, -1]
@@ -191,9 +187,9 @@ def I_divergence(X, Y):
     """
     I-divergence
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
-    d = (RY*(sp.log(RY+0.00001)-sp.log(RX+0.00001)) + (RX-RY)).sum()
+    d = (RY*(sp.log(RY+1e-10)-sp.log(RX+1e-10)) + (RX-RY)).sum()
     
     return d
     
@@ -202,25 +198,25 @@ def I_divergence_symmetry(X, Y):
     
     return d
     
-def KL_divergence_1d(X, Y):
-    d =(Y*(sp.log(Y+0.00001)-sp.log(X+0.00001))).sum()
-    return d
-
-def KL2_divergence_1d(X, Y):
-    d = 0.5 * KL_divergence_1d(X, Y) + 0.5 * KL_divergence_1d(Y, X)
-    return d
-
 def KL_divergence(X, Y):
+    d = ( Y * ( sp.log(Y) - sp.log(X) ) ).sum()
+    return d
+
+def KL2_divergence(X, Y):
+    d = 0.5 * KL_divergence(X, Y) + 0.5 * KL_divergence(Y, X)
+    return d
+
+def KL_divergence_2d(X, Y):
     """
     KL-divergence
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
-    d = ( (RY*(sp.log(RY+0.00001)-sp.log(RX+0.00001))).sum(1) ).mean()
+    d = ( (RY*(sp.log(RY)-sp.log(RX))).sum(1) ).mean()
     
     return d
     
-def KL2_divergence(X, Y):
+def KL2_divergence_2d(X, Y):
     """
     symmetric KL divergence (KL2)
 
@@ -231,7 +227,7 @@ def KL2_divergence(X, Y):
     return d
 
 def JS_divergence(X, Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
 
     M = 0.5 * (RX+RY)
     d = 0.5 * ( KL_divergence(RX, M) + KL_divergence(RY, M) )
@@ -241,7 +237,7 @@ def IS_divergence(X, Y):
     """
     板倉斎藤距離
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
     d = (RY/RX - sp.log(RY/RX + 0.00001) - 1).sum()
     
@@ -264,7 +260,7 @@ def beta_divergence(X, Y, b):
     Returns:
       beta-divergenceの値
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
     if b == 1:
         d = (RY*(sp.log(RY+0.00001)-sp.log(RX+0.00001)) + (RX-RY)).sum()
@@ -327,7 +323,7 @@ def KL2_divergence_gauss(gmm_prm1, gmm_prm2):
 
 """ helper functions """
 
-def _adjust_vector_dims(X, Y):
+def _adjust_vector_dimensions(X, Y):
     """
     距離計算する2つの2次元ベクトルの要素数を合わせる
     長い方に合わせ、短い方のベクトルは0詰めする

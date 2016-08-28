@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-@file kmeans.py
-@brief kmeans clustering
-@author ふぇいと (@stfate)
+============================================================
+@file   cluster.py
+@date   2012/06/29
+@author sasai
 
-@description
+@brief  clustering functions
 
+============================================================
 """
-
 import scipy as sp
 import random
 
@@ -52,7 +53,7 @@ def kmeans(features, n_clusters=2, max_iter=50):
     labels = (sp.rand(n_obs) * n_clusters).astype('int')
         
     # 初期セントロイド
-    for k in xrange(n_clusters):
+    for k in range(n_clusters):
         subset = features[sp.where(labels == k)]
         centers[k] = subset.mean(0)
     
@@ -62,19 +63,19 @@ def kmeans(features, n_clusters=2, max_iter=50):
     it = 0
     # while (numIter < maxIter and sp.sum(abs(label-old_label)) != 0):
     while (it < max_iter):
-        print it
+        print(it)
         # 直前のクラスタ分割を保存
         old_labels = labels.copy()
         
         # E-step: 各観測をセントロイドとの距離が最小になるクラスタへ再配置
-        for i in xrange(n_obs):
+        for i in range(n_obs):
             D = sp.array([sp.sqrt( ( (features[i]-centers[k])**2 ).sum() ) for k in xrange(n_clusters)])
             error += (D**2).sum()
             min_idx = sp.argmin(D)
             labels[i] = min_idx
             
         # M-step: セントロイドの更新
-        for k in xrange(n_clusters):
+        for k in range(n_clusters):
             subset = features[sp.where(labels == k)]
             centers[k] = subset.mean(0)
             

@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-@file similarity_matrix.pyx
-@brief similarity matrix extractor (cython version)
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Cython implementation of structural feature extractors
+====================================================================
 """
 
 import cython
 import numpy as np
 cimport numpy as np
 import numpy.linalg as linalg
-from pylufia.stats.distance import *
+from ymh_mir.stats.distance import *
 
 
 def similarity_matrix_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y, metric='cos'):
@@ -74,7 +71,7 @@ def similarity_matrix_2d_cy(X, Y, metric='cos'):
             
     return SM
 
-def add_axis_to_similarity_matrix2d_cy(feature, X, Y, SM, metric='cos'):
+def addAxisToSimilarityMatrix2d_cy(feature, X, Y, SM, metric='cos'):
     """
     既にあるSimilarity Matrixに対し，一つ特徴量を追加したSimilarity Matrixを作る
     """

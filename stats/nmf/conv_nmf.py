@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file conv_nmf.py
-@brief Convolutive NMF
-@author ふぇいと (@stfate)
+conv_nmf.py
 
-@description
-
+Convolutive NMFの実装
 """
 
 import scipy as sp
 from multiprocessing import Pool
-
 
 def conv_nmf(X, n_basis, T=8, n_iter=100):
     """
@@ -27,20 +23,19 @@ def conv_nmf(X, n_basis, T=8, n_iter=100):
     Hcand = (sp.rand(T, n_basis, nT) + 10) * X.mean()
     one_mat = sp.ones((nF,nT))
 
-    for i in xrange(n_iter):
+    for i in range(n_iter):
         # W[t]をすべて更新
         WH = computeWH(W, H)
-        for t in xrange(T):
+        for t in range(T):
             W[t] *= sp.dot(X/WH, _rshift(H,t).T) / sp.dot(one_mat, _rshift(H,t).T)
         # すべてのtに対してそれぞれ更新されたHを求め平均する
         WH = computeWH(W, H)
-        for t in xrange(T):
+        for t in range(T):
             Hcand[t] = H * sp.dot(W[t].T, _lshift(X/WH,t)) / (SPARSENESS + sp.dot(W[t].T, one_mat))
         H = Hcand.mean(0)
             
         WH = computeWH(W, H)
         D = _calcKLdivergence(X, WH)
-        print D
 
     return W,H
 
@@ -68,15 +63,14 @@ def conv_nmf_activation(X, W, n_iter=100):
     Hcand = (sp.rand(T, n_basis, nT) + 10) * X.mean()
     one_mat = sp.ones((nF,nT))
 
-    for i in xrange(n_iter):
+    for i in range(n_iter):
         WH = computeWH(W, H)
-        for t in xrange(T):
+        for t in range(T):
             Hcand[t] = H * sp.dot(W[t].T, _lshift(X/WH,t)) / (SPARSENESS + sp.dot(W[t].T, one_mat))
         H = Hcand.mean(0)
             
         WH = computeWH(W, H)
         D = _calcKLdivergence(X, WH)
-        print D
 
     return H
 
@@ -86,7 +80,7 @@ def computeWH(W, H):
     """
     T = W.shape[0]
     Y = sp.zeros( (W.shape[1],H.shape[1]) )
-    for t in xrange(T):
+    for t in range(T):
         Y += sp.dot(W[t], _matrix_rshift(H, t))
 
     return Y

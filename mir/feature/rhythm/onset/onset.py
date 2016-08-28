@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file onset.py
-@brief onset detection
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import scipy as sp
-from pylufia.mir.feature.timbre import *
+from pylufiafeature.timbre import *
 from pylufia.signal import *
 from pylufia.signal.moving_average import moving_average_exp_cy
 from pylufia.signal.spectral import *
+import pylufia.signal.filter.iir as iir
 
 
 def onset(input, framesize=1024, hopsize=512, fs=44100, method='mfcc'):
@@ -52,7 +44,7 @@ def onset(input, framesize=1024, hopsize=512, fs=44100, method='mfcc'):
 def _onset_by_logspe(input, framesize=1024, hopsize=180, fs=44100):
     S,F,T = stft(input, framesize, hopsize, fs, "hamming")
     logS = sp.log10(sp.absolute(S)+1e-10)
-        
+    
     diff_logS = logS[:,1:] - logS[:,:-1]
     diff_logS[diff_logS<0] = 0
 
@@ -177,11 +169,11 @@ def _onset_by_sol(input, framesize=512, hopsize=256, fs=44100, window='hann'):
     flag3 = 0
 
     # 前処理フィルタ
-    bef_b, bef_a = iirCalcCoefFs(2.0, 200.0, -6.0, 'bpf', fs)
-    hpf_b, hpf_a = iirCalcCoefFs(2.0, 4000.0, 3.0, 'hpf2', fs)
+    bef_b, bef_a = iir.calc_coef_fs(2.0, 200.0, -6.0, 'bpf', fs)
+    hpf_b, hpf_a = iir.calc_coef_fs(2.0, 4000.0, 3.0, 'hpf2', fs)
 
-    fil_data = iirApply(input, bef_b, bef_a)
-    fil_data = iirApply(fil_data, hpf_b, hpf_a)
+    fil_data = iir.apply(input, bef_b, bef_a)
+    fil_data = iir.apply(fil_data, hpf_b, hpf_a)
 
     odf = flux(fil_data, framesize, hopsize, window, fs)
     odf = moving_average_exp_cy(odf, 10)

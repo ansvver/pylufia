@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-@file prob_dists.py
-@brief classes for computing probabilistic distributions
-@author ふぇいと (@stfate)
+prob_dists.py
 
-@description
-確率分布これくしょん
+確率分布を計算する関数群
 """
 
 import scipy as sp
 import scipy.misc
 import scipy.special
-from common import digamma
+from .common import digamma
 import scipy.linalg as linalg
-
 
 class Bern():
     """
@@ -329,10 +325,3 @@ class GIG():
 
         V = self.gamma/self.beta * (fact1 - fact2**2)
         return V
-
-class Student_t():
-    def __init__(self, ):
-        pass
-
-    def function(self):
-        pass

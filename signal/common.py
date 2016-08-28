@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file common.py
-@brief common functions of signal package
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Common functions for signal
+====================================================================
 """
 
 import scipy as sp
+import scipy.signal as sp_sig
 
 
 def autocorr(input, n_lag):
@@ -99,7 +97,7 @@ def peak(input, threshold):
       result: ndarray
         peak amplitude array
     """
-    peak_data = sp.zeros(len(input))
+    peak_data = sp.zeros( len(input) )
     for i in xrange(len(input)-1):
         if input[i] - input[i-1] > 0 and input[i+1] - input[i] < 0:
             if input[i] >= threshold[i]:

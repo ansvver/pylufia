@@ -1,23 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file gap_nmf_cy.pyx
-@brief GaPNMF (cython version)
-@author ふぇいと (@stfate)
-
-@description
-GaP-NMF(Gamma Process NMF)の実装．
-
-M.D.Hoffman, ''Bayesian Nonparametric Matrix Factorization for Recorded Music''
-をほぼそのまま実装
+GaPNMF cython implementation
 """
 
 cimport cython
 import numpy as np
 cimport numpy as np
-from pylufia.stats import GIG_cy
-
-import time
+from ymh_mir.stats import GIG_cy
 
 
 class GaPNMF_cy():
@@ -36,6 +26,10 @@ class GaPNMF_cy():
         self.c_val = c
         self.criterion = criterion
         self._convert_hparam_to_matrix(aw, bw, ah, bh, alpha, c, None, None)
+
+        self.scaling = 10000
+
+        #np.random.seed(98765) #debug
 
         # initialize parameters
         self.rhow = np.zeros((self.nF,self.K), dtype=np.double)
@@ -58,20 +52,23 @@ class GaPNMF_cy():
         self.gigT = None
 
     def _init_parameters(self, supervised=False):
-        self.rhow = 10000 * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.nF,self.K))
-        self.tauw = 10000 * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.nF,self.K))
-        self.rhoh = 10000 * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,self.nT))
-        self.tauh = 10000 * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,self.nT))
-        self.rhot = self.K * 10000 * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,))
-        self.taut = 1./self.K * 10000 * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,))
+        """
+        潜在変数の初期化
+        """
+        self.rhow = self.scaling * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.nF,self.K))
+        self.tauw = self.scaling * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.nF,self.K))
+        self.rhoh = self.scaling * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,self.nT))
+        self.tauh = self.scaling * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,self.nT))
+        self.rhot = self.K * self.scaling * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,))
+        self.taut = 1./self.K * self.scaling * np.random.gamma(self.smoothness, 1./self.smoothness, size=(self.K,))
 
-        # if not supervised:
-        #     self.rhow = np.random.gamma(100, 1/1000., size=(self.nF,self.K))
-        #     self.tauw[:] = 0.1
-        # self.rhoh = np.random.gamma(100, 1/1000., size=(self.K,self.nT))
-        # self.tauh[:] = 0.1
-        # self.rhot = np.random.gamma(100, 1/1000., size=(self.K,))
-        # self.taut[:] = 0.1
+         #if not supervised:
+         #    self.rhow = np.random.gamma(100, 1/1000., size=(self.nF,self.K))
+         #    self.tauw[:] = 0.1
+         #self.rhoh = np.random.gamma(100, 1/1000., size=(self.K,self.nT))
+         #self.tauh[:] = 0.1
+         #self.rhot = np.random.gamma(100, 1/1000., size=(self.K,))
+         #self.taut[:] = 0.1
 
         self.gigW = GIG_cy(self.aw, self.rhow, self.tauw)
         self.gigH = GIG_cy(self.ah, self.rhoh, self.tauh)
@@ -80,19 +77,30 @@ class GaPNMF_cy():
         self._compute_expectations(supervised=supervised)
 
     def _init_parameters_fixed(self, supervised=False):
+        """
+        潜在変数の初期値をすべて1*scalingに固定するバージョン
+        """
         if not supervised:
-            self.rhow = 10000 * np.ones( (self.nF,self.K) )
-            self.tauw = 10000 * np.ones( (self.nF,self.K) )
-        self.rhoh = 10000 * np.ones( (self.K,self.nT) )
-        self.tauh = 10000 * np.ones( (self.K,self.nT) )
-        self.rhot = self.K * 10000 * np.ones(self.K)
-        self.taut = 1./self.K * 10000 * np.ones(self.K)
+            self.rhow = self.scaling * np.ones( (self.nF,self.K) )
+            self.tauw = self.scaling * np.ones( (self.nF,self.K) )
+        self.rhoh = self.scaling * np.ones( (self.K,self.nT) )
+        self.tauh = self.scaling * np.ones( (self.K,self.nT) )
+        self.rhot = self.K * self.scaling * np.ones(self.K)
+        self.taut = 1./self.K * self.scaling * np.ones(self.K)
 
         self.gigW = GIG_cy(self.aw, self.rhow, self.tauw)
         self.gigH = GIG_cy(self.ah, self.rhoh, self.tauh)
         self.gigT = GIG_cy(self.alpha/float(self.K), self.rhot, self.taut)
 
         self._compute_expectations(supervised=supervised)
+
+    def load_init_parameters(self, rhow, tauw, rhoh, tauh, rhot, taut):
+        self.rhow = rhow
+        self.tauw = tauw
+        self.rhoh = rhoh
+        self.tauh = tauh
+        self.rhot = rhot
+        self.taut = taut
 
     def _compute_expectations(self, supervised=False):
         """
@@ -101,20 +109,23 @@ class GaPNMF_cy():
         if not supervised:
             # gig_W = GIG_cy(self.a, self.rhow, self.tauw)
             self.gigW.update(self.aw, self.rhow, self.tauw)
-            self.Ew = self.gigW.expectation()
-            self.Ew_inv = self.gigW.inv_expectation()
+            #self.Ew = self.gigW.expectation()
+            #self.Ew_inv = self.gigW.inv_expectation()
+            self.Ew,self.Ew_inv = self.gigW.expectation_both()
             self.Ew_inv_inv = 1.0 / self.Ew_inv
 
         # gig_theta = GIG_cy(self.alpha/float(self.K), self.rhot, self.taut)
         self.gigT.update(self.alpha/float(self.K), self.rhot, self.taut)
-        self.Et = self.gigT.expectation()
-        self.Et_inv = self.gigT.inv_expectation()
+        #self.Et = self.gigT.expectation()
+        #self.Et_inv = self.gigT.inv_expectation()
+        self.Et,self.Et_inv = self.gigT.expectation_both()
         self.Et_inv_inv = 1.0 / self.Et_inv
 
         # gig_H = GIG_cy(self.b, self.rhoh, self.tauh)
         self.gigH.update(self.ah, self.rhoh, self.tauh)
-        self.Eh = self.gigH.expectation()
-        self.Eh_inv = self.gigH.inv_expectation()
+        #self.Eh = self.gigH.expectation()
+        #self.Eh_inv = self.gigH.inv_expectation()
+        self.Eh,self.Eh_inv = self.gigH.expectation_both()
         self.Eh_inv_inv = 1.0 / self.Eh_inv
 
     def _convert_hparam_to_matrix(self, aw=0.1, bw=0.1, ah=0.1, bh=0.1, alpha=1.0, c=1.0, ahx=None, emp_index=None):
@@ -162,7 +173,7 @@ class GaPNMF_cy():
             score = self.log_likelihood()
             improvement = (score - last_score) / np.abs(last_score)
             if show_prompt:
-                print 'iterates: {} log likelihood={:.2f} ({:.5f} improvement)'.format(it, score, improvement)
+                print( 'iterates: {} log likelihood={:.2f} ({:.5f} improvement)'.format(it, score, improvement) )
 
             if it > 20 and improvement < self.criterion:
                 break
@@ -209,7 +220,7 @@ class GaPNMF_cy():
             score = self.log_likelihood()
             improvement = (score - last_score) / np.abs(last_score)
             if show_prompt:
-                print 'iterates: {} log likelihood={:.2f} ({:.5f} improvement)'.format(it, score, improvement)
+                print( 'iterates: {} log likelihood={:.2f} ({:.5f} improvement)'.format(it, score, improvement) )
 
             if it > 20 and improvement < self.criterion:
                 break
@@ -224,13 +235,14 @@ class GaPNMF_cy():
         ただしフリーな基底をいくつか用意し，どの教師基底にも属さない成分を吸収する
         """
         self.orig_K = Ew.shape[1]
-        self.K = Ew.shape[1] + n_free_basis
+        self.K = self.orig_K + n_free_basis
         self._convert_hparam_to_matrix(self.aw_val, self.bw_val, self.ah_val, self.bh_val, self.alpha_val, self.c_val, None, None)
         self.ah = np.zeros( (self.K,self.Eh.shape[1]), dtype=np.double )
         self.ah[:Ew.shape[1],:] = ahx
         self.ah[Ew.shape[1]:,:] = ahu
 
-        self._init_parameters(supervised=False)
+        #self._init_parameters(supervised=False)
+        self._init_parameters_fixed(supervised=False)
         self.Ew[:,:Ew.shape[1]] = Ew
         self.Ew_inv[:,:Ew_inv.shape[1]] = Ew_inv
         self.Ew_inv_inv = 1.0 / self.Ew_inv
@@ -248,17 +260,17 @@ class GaPNMF_cy():
             score = self.log_likelihood()
             improvement = (score - last_score) / np.abs(last_score)
             if show_prompt:
-                print 'iterates: {} log likelihood={:.2f} ({:.5f} improvement)'.format(it, score, improvement)
+                print( 'iterates: {} log likelihood={:.2f} ({:.5f} improvement)'.format(it, score, improvement) )
 
             if it > 20 and improvement < self.criterion:
                 break
 
         # self._clearBadK(supervised=True)
 
-        H = self.Eh[:self.orig_K,:]
-        # H = self.Eh
+        Eh = self.Eh[:self.orig_K,:]
+        Et = self.Et[:self.orig_K]
 
-        return H
+        return Eh,Et
 
     def _updateW(self, goodk=None):
         """
@@ -267,35 +279,42 @@ class GaPNMF_cy():
         if goodk is None:
             goodk = self._goodK()
         cdef np.ndarray[double,ndim=2] E_tWH = np.dot(self.Ew[:,goodk], self.Et[goodk,np.newaxis]*self.Eh[goodk,:])
-        print self.Ew_inv_inv
-        print self.Et_inv_inv
-        print self.Eh_inv_inv
         cdef np.ndarray[double,ndim=2] E_tWH_inv = np.dot(self.Ew_inv_inv[:,goodk], self.Et_inv_inv[goodk,np.newaxis]*self.Eh_inv_inv[goodk,:])
-        cdef np.ndarray[double,ndim=2] XX = self.X * E_tWH_inv**(-2)
+        cdef np.ndarray[double,ndim=2] XX = self.X * (E_tWH_inv+1e-10)**(-2)
         
-        self.rhow[:,goodk] = self.bw[:,goodk] + np.dot(E_tWH**(-1), self.Et[goodk] * self.Eh[goodk,:].T)
+        self.rhow[:,goodk] = self.bw[:,goodk] + np.dot( (E_tWH+1e-10)**(-1), self.Et[goodk] * self.Eh[goodk,:].T)
         self.tauw[:,goodk] = self.Ew_inv_inv[:,goodk]**2 * np.dot(XX, self.Et_inv_inv[goodk] * self.Eh_inv_inv[goodk,:].T)
         self.tauw[self.tauw < 1e-100] = 0
-        print "Ew_inv_inv:"
-        print self.Ew_inv_inv
-        print "XX:"
-        print XX
-        print "Et_inv_inv:"
-        print self.Et_inv_inv
-        print "Eh_inv_inv:"
-        print self.Eh_inv_inv
 
         # gig_W = GIG_cy(self.a, self.rhow[:,goodk], self.tauw[:,goodk])
         self.gigW.update(self.aw[:,goodk], self.rhow[:,goodk], self.tauw[:,goodk])
-        self.Ew[:,goodk] = self.gigW.expectation()
-        self.Ew_inv[:,goodk] = self.gigW.inv_expectation()
+        #self.Ew[:,goodk] = self.gigW.expectation()
+        #self.Ew_inv[:,goodk] = self.gigW.inv_expectation()
+        self.Ew[:,goodk],self.Ew_inv[:,goodk] = self.gigW.expectation_both()
         self.Ew_inv_inv[:,goodk] = 1.0 / self.Ew_inv[:,goodk]
 
     def _updateW_withFreeBasis(self, Ew, Ew_inv, goodk=None):
-        self._updateW(goodk=goodk)
-        self.Ew[:,:Ew.shape[1]] = Ew
-        self.Ew_inv[:,:Ew_inv.shape[1]] = Ew_inv
-        self.Ew_inv_inv = 1.0 / self.Ew_inv
+        #self._updateW(goodk=goodk)
+        #self.Ew[:,:Ew.shape[1]] = Ew
+        #self.Ew_inv[:,:Ew_inv.shape[1]] = Ew_inv
+        #self.Ew_inv_inv = 1.0 / self.Ew_inv
+
+        if goodk is None:
+            goodk = self._goodK()
+        cdef np.ndarray[double,ndim=2] E_tWH = np.dot(self.Ew[:,goodk], self.Et[goodk,np.newaxis]*self.Eh[goodk,:])
+        cdef np.ndarray[double,ndim=2] E_tWH_inv = np.dot(self.Ew_inv_inv[:,goodk], self.Et_inv_inv[goodk,np.newaxis]*self.Eh_inv_inv[goodk,:])
+        cdef np.ndarray[double,ndim=2] XX = self.X * (E_tWH_inv+1e-10)**(-2)
+        
+        self.rhow[:,goodk] = self.bw[:,goodk] + np.dot( (E_tWH+1e-10)**(-1), self.Et[goodk] * self.Eh[goodk,:].T)
+        self.tauw[:,goodk] = self.Ew_inv_inv[:,goodk]**2 * np.dot(XX, self.Et_inv_inv[goodk] * self.Eh_inv_inv[goodk,:].T)
+        self.tauw[self.tauw < 1e-100] = 0
+
+        update_K = np.arange(Ew.shape[1]+1, self.Ew.shape[1])
+        self.gigW.update(self.aw[:,update_K], self.rhow[:,update_K], self.tauw[:,update_K])
+        #self.Ew[:,update_K] = self.gigW.expectation()
+        #self.Ew_inv[:,update_K] = self.gigW.inv_expectation()
+        self.Ew[:,update_K],self.Ew_inv[:,update_K] = self.gigW.expectation_both()
+        self.Ew_inv_inv[:,update_K] = 1.0 / self.Ew_inv[:,update_K]
 
     def _updateH(self, goodk=None):
         """
@@ -305,7 +324,7 @@ class GaPNMF_cy():
             goodk = self._goodK()
         cdef np.ndarray[double,ndim=2] E_tWH = np.dot(self.Ew[:,goodk], self.Et[goodk,np.newaxis]*self.Eh[goodk,:])
         cdef np.ndarray[double,ndim=2] E_tWH_inv = np.dot(self.Ew_inv_inv[:,goodk], self.Et_inv_inv[goodk,np.newaxis]*self.Eh_inv_inv[goodk,:])
-        cdef np.ndarray[double,ndim=2] XX = self.X * E_tWH_inv**(-2)
+        cdef np.ndarray[double,ndim=2] XX = self.X * (E_tWH_inv + 1e-10)**(-2)
 
         self.rhoh[goodk,:] = self.bh[goodk,:] + np.dot(self.Et[goodk,np.newaxis]*self.Ew[:,goodk].T, E_tWH**(-1))
         self.tauh[goodk,:] = self.Eh_inv_inv[goodk,:]**2 * np.dot(self.Et_inv_inv[goodk,np.newaxis]*self.Ew_inv_inv[:,goodk].T, XX)
@@ -313,13 +332,10 @@ class GaPNMF_cy():
 
         # gig_H = GIG_cy(self.b, self.rhoh[goodk,:], self.tauh[goodk,:])
         self.gigH.update(self.ah[goodk,:], self.rhoh[goodk,:], self.tauh[goodk,:])
-        self.Eh[goodk,:] = self.gigH.expectation()
-        self.Eh_inv[goodk,:] = self.gigH.inv_expectation()
+        #self.Eh[goodk,:] = self.gigH.expectation()
+        #self.Eh_inv[goodk,:] = self.gigH.inv_expectation()
+        self.Eh[goodk,:],self.Eh_inv[goodk,:] = self.gigH.expectation_both()
         self.Eh_inv_inv[goodk,:] = 1.0 / self.Eh_inv[goodk,:]
-
-        print "Eh={}".format(self.Eh)
-        print "Eh_inv={}".format(self.Eh_inv)
-        print "Eh_inv_inv={}".format(self.Eh_inv_inv)
         
     def _updateTheta(self, goodk=None):
         """
@@ -329,16 +345,18 @@ class GaPNMF_cy():
             goodk = self._goodK()
         cdef np.ndarray[double,ndim=2] E_tWH = np.dot(self.Ew[:,goodk], self.Et[goodk,np.newaxis]*self.Eh[goodk,:])
         cdef np.ndarray[double,ndim=2] E_tWH_inv = np.dot(self.Ew_inv_inv[:,goodk], self.Et_inv_inv[goodk,np.newaxis]*self.Eh_inv_inv[goodk,:])
-        cdef np.ndarray[double,ndim=2] XX = self.X * E_tWH_inv**(-2)
+        cdef np.ndarray[double,ndim=2] XX = self.X * (E_tWH_inv + 1e-10)**(-2)
+        # E_tWH_invに0が含まれるとzero division errorになる
 
-        self.rhot[goodk] = self.alpha[goodk]*self.c[goodk] + (np.dot(self.Ew[:,goodk].T, E_tWH**(-1)) * self.Eh[goodk,:]).sum(1)
+        self.rhot[goodk] = self.alpha[goodk]*self.c[goodk] + (np.dot(self.Ew[:,goodk].T, (E_tWH+1e-10)**(-1)) * self.Eh[goodk,:]).sum(1)
         self.taut[goodk] = self.Et_inv_inv[goodk]**2 * (np.dot(self.Ew_inv_inv[:,goodk].T, XX) * self.Eh_inv_inv[goodk,:]).sum(1)
         self.taut[self.taut < 1e-100] = 0
 
         # gig_theta = GIG_cy(self.alpha/float(self.K), self.rhot[goodk], self.taut[goodk])
         self.gigT.update(self.alpha[goodk]/float(self.K), self.rhot[goodk], self.taut[goodk])
-        self.Et[goodk] = self.gigT.expectation()
-        self.Et_inv[goodk] = self.gigT.inv_expectation()
+        #self.Et[goodk] = self.gigT.expectation()
+        #self.Et_inv[goodk] = self.gigT.inv_expectation()
+        self.Et[goodk],self.Et_inv[goodk] = self.gigT.expectation_both()
         self.Et_inv_inv[goodk] = 1.0 / self.Et_inv[goodk]
 
     def getW(self, active_only=True):
@@ -382,11 +400,12 @@ class GaPNMF_cy():
         Y = np.dot(self.Ew[:,goodk], self.Et[goodk,np.newaxis]*self.Eh[goodk,:])
 
         # return ( Y * ( np.log(Y) - np.log(X) ) + (X-Y) ).sum()
-        return ( Y * ( np.log(Y) - np.log(X) ) ).sum()
+        return ( Y * ( np.log(Y+1e-10) - np.log(X+1e-10) ) ).sum()
 
     def log_likelihood(self):
         score = 0.0
-        goodk = self._goodK()
+        #goodk = self._goodK()
+        goodk = np.arange(self.K, dtype=np.int32)
         E_tWH = np.dot(self.Ew[:,goodk], self.Et[goodk,np.newaxis]*self.Eh[goodk,:])
         E_tWH_inv = np.dot(self.Ew_inv_inv[:,goodk], self.Et_inv_inv[goodk,np.newaxis]*self.Eh_inv_inv[goodk,:])
 
@@ -405,7 +424,6 @@ class GaPNMF_cy():
         cdef np.ndarray[double,ndim=1] powers = self.Et * self.Ew.max(0) * self.Eh.max(1)
         sorted_powers = np.flipud(np.argsort(powers))
         idx = np.where(powers[sorted_powers] > cutoff * powers.max())[0]
-        print idx
         goodk = sorted_powers[:(idx[-1]+1)]
         if powers[goodk[-1]] < cutoff:
             goodk = np.delete(goodk,-1)

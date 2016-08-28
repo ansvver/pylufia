@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file vb_lda_cy.pyx
-@brief Variational Bayes LDA (cython version)
-@author ふぇいと (@stfate)
+vb_lda_cy.pyx
 
-@description
-
+変分ベイズLDAのCython実装
 """
 
 import cython
@@ -99,7 +96,7 @@ class VBLDA_cy():
 
         cdef int it
         for it from 0 <= it < self.n_iter:
-            print 'iterates: {0}'.format(it)
+            print( 'iterates: {0}'.format(it) )
 
             ## E-step: phiとgammaを更新
             t1 = time.clock()
@@ -115,7 +112,7 @@ class VBLDA_cy():
             
             self.e_step()
             t2 = time.clock()
-            print 'time for e-step: {0}[s]'.format(t2-t1)
+            print( 'time for e-step: {0}[s]'.format(t2-t1) )
 
             # print 'phi:{0}\ngamma:{0}\n'.format(self.phi, self.gam)
 
@@ -134,12 +131,12 @@ class VBLDA_cy():
             # self.alpha = self.newton_alpha(self.vb_gamma, 20, self.alpha)
             self.m_step()
             t2 = time.clock()
-            print 'time for m-step: {0}[s]'.format(t2-t1)
+            print( 'time for m-step: {0}[s]'.format(t2-t1) )
 
-            print 'alpha:{0}\nbeta:{1}\n'.format(self.alpha,self.beta)
+            print( 'alpha:{0}\nbeta:{1}\n'.format(self.alpha,self.beta) )
             L = self.likelihood(self.documents)
             # L = _lda.likelihood_cy(self.documents, self.vb_gamma, self.vb_phi, self.alpha, self.beta, self.K)
-            print 'log likelihood={}'.format(L)
+            print( 'log likelihood={}'.format(L) )
 
     def e_step(self):
         cdef int D = self.documents.shape[0]

@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-@file perceptron.py
-@brief
-@author ふぇいと (@stfate)
-
-@description
-
+perceptron.py
 """
 
 import scipy as sp
-
 
 class LinearClassifier():
     def __init__(self, alpha, A, E):
@@ -83,7 +77,7 @@ def main():
     input_01 = sp.array([6,7,8,9,10])
     input_02 = sp.array([-4,-5,-6,-7,-8])
     f = c_model.classify(input_01)
-    print f
+    print(f)
 
 if __name__ == '__main__':
     main()

@@ -1,13 +1,5 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""
-@file dp.py
-@brief DP matching functions
-@author ふぇいと (@stfate)
-
-@description
-
-"""
 
 import scipy as sp
 import scipy.spatial.distance as spdist
@@ -36,18 +28,18 @@ def dp_match(seq1, seq2):
     mismatch_mat[mismatch_idx[0],mismatch_idx[1]] = 1
     
     cost_mat = sp.zeros((len(seq1),len(seq2)))
-    for i in xrange(1, len(seq1)):
+    for i in range(1, len(seq1)):
         cost_mat[i,0] = cost_mat[i-1,0] + move_penalty + mismatch_mat[i,0] * mismatch_penalty
-    for j in xrange(1, len(seq2)):
+    for j in range(1, len(seq2)):
         cost_mat[0,j] = cost_mat[0,j-1] + move_penalty + mismatch_mat[0,j] * mismatch_penalty
-    for i in xrange(1, len(seq1)):
-        for j in xrange(1, len(seq2)):
+    for i in range(1, len(seq1)):
+        for j in range(1, len(seq2)):
             cost_s = cost_mat[i-1,j-1] + mismatch_mat[i,j] * mismatch_penalty
             cost_h = cost_mat[i,j-1] + move_penalty + mismatch_mat[i,j] * mismatch_penalty
             cost_v = cost_mat[i-1,j] + move_penalty + mismatch_mat[i,j] * mismatch_penalty
             cost_mat[i,j] = min(cost_s,cost_h,cost_v)
             
-    path_mat = _trace_optimal_path(cost_mat)
+    path_mat = _traceOptimalPath(cost_mat)
     
     return cost_mat,path_mat
     
@@ -56,15 +48,15 @@ def dp_match_with_dist(seq1, seq2):
     コストにシーケンス要素間の距離を導入したDP
     """
     cost_mat = sp.zeros((len(seq1),len(seq2)))
-    for i in xrange(1, len(seq1)):
+    for i in range(1, len(seq1)):
         cost_mat[i,0] = cost_mat[i-1,0] + sp.absolute(seq1[i]-seq2[0])
-    for j in xrange(1, len(seq2)):
+    for j in range(1, len(seq2)):
         cost_mat[0,j] = cost_mat[0,j-1] + sp.absolute(seq1[0]-seq2[j])
-    for i in xrange(1, len(seq1)):
-        for j in xrange(1, len(seq2)):
+    for i in range(1, len(seq1)):
+        for j in range(1, len(seq2)):
             cost_mat[i,j] = min(cost_mat[i-1,j],cost_mat[i,j-1],cost_mat[i-1,j-1]) + sp.absolute(seq1[i]-seq2[j])
             
-    path_mat = _trace_optimal_path(cost_mat)
+    path_mat = _traceOptimalPath(cost_mat)
     
     return cost_mat,path_mat
     
@@ -81,12 +73,12 @@ def dp_match_semitone_power(feature1, feature2):
     n_frames1 = feature1.shape[0]
     n_frames2 = feature2.shape[0]
     cost_mat = sp.zeros((n_frames1,n_frames2))
-    for i in xrange(1, n_frames1):
+    for i in range(1, n_frames1):
         cost_mat[i,0] = cost_mat[i-1,0] + move_penalty + distfunc(feature1[i],feature2[0]) * mismatch_penalty
-    for j in xrange(1, n_frames2):
+    for j in range(1, n_frames2):
         cost_mat[0,j] = cost_mat[0,j-1] + move_penalty + distfunc(feature1[0],feature2[j]) * mismatch_penalty
-    for i in xrange(1, n_frames1):
-        for j in xrange(1, n_frames2):
+    for i in range(1, n_frames1):
+        for j in range(1, n_frames2):
             cost_s = cost_mat[i-1,j-1] + distfunc(feature1[i],feature2[j]) * mismatch_penalty
             cost_h = cost_mat[i,j-1] + move_penalty + distfunc(feature1[i],feature2[j]) * mismatch_penalty
             cost_v = cost_mat[i-1,j] + move_penalty + distfunc(feature1[i],feature2[j]) * mismatch_penalty

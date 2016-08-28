@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file cgs_lda.py
-@brief Collapsed Gibbs Sampling LDA
-@author ふぇいと (@stfate)
+cgs_lda.py
 
-@description
 Collapsed Gibbs SamplingによるLDA
 """
 
 import scipy as sp
 import scipy.sparse as sp_sparse
-import cPickle
 
 
 class CGSLDA():
@@ -55,7 +51,7 @@ class CGSLDA():
     def _initialize_parameters(self):
         self.W = 0
 
-        for d in xrange(self.n_docs):
+        for d in range(self.n_docs):
             self.topics[d,:] = sp.random.randint(0, self.n_topics, self.n_words)
             exist_words_idx = sp.where(self.documents[d] > 0)[0]
             n_words_cur = len(exist_words_idx)
@@ -73,13 +69,13 @@ class CGSLDA():
         self._initialize_parameters()
 
         P_arr = sp.zeros(n_iter)
-        for it in xrange(n_iter):
+        for it in range(n_iter):
             self._update_counters()
             self._update_parameters()
 
             P = self.perplexity(self.documents)
             P_arr[it] = P
-            print 'iterates: {} perplexity={}'.format(it,P)
+            print( 'iterates: {} perplexity={}'.format(it,P) )
 
         self.theta = sp.array(self.theta_history).mean(0)
         self.phi = sp.array(self.phi_history).mean(0)
@@ -90,7 +86,7 @@ class CGSLDA():
         return P_arr
 
     def _update_counters(self):
-        for d in xrange(self.n_docs):
+        for d in range(self.n_docs):
             exist_words_idx = sp.where(self.documents[d] > 0)[0]
             for w in exist_words_idx:
                 k = self.topics[d,w]
@@ -146,7 +142,7 @@ class CGSLDA():
         n_k_new = sp.zeros( (self.n_topics), dtype=sp.int32 )
 
         topics = sp.random.randint(0, self.n_topics, self.n_words)
-        theta_log = []
+        theta_history = []
 
         exist_words_idx = sp.where(document > 0)[0]
         n_words_cur = len(exist_words_idx)
@@ -159,7 +155,7 @@ class CGSLDA():
             n_kw_new[k,w] += dw
             n_k_new[k] += dw
 
-        for it in xrange(n_iter):
+        for it in range(n_iter):
             for w in exist_words_idx:
             # for w in xrange(self.n_words):
                 k = topics[w]
@@ -185,9 +181,9 @@ class CGSLDA():
 
             # phi = (self.n_kw + n_kw_new + self.beta) / (self.n_k[:,sp.newaxis] + n_k_new[:,sp.newaxis] + self.W * self.beta)
             theta = (n_dk_new + self.alpha) / (n_d_new + self.n_topics * self.alpha)
-            self._pushValueToLog(theta_log, theta)
+            self._push_value_to_history(theta_history, theta)
 
-        theta_final = sp.array(theta_log).mean(0)
+        theta_final = sp.array(theta_history).mean(0)
 
         return theta_final
 
@@ -206,11 +202,11 @@ class CGSLDA():
         perplexity = 0.0
         n_docs = documents.shape[0]
         N = documents.sum()
-        for d in xrange(n_docs):
+        for d in range(n_docs):
             words_exist_idx = sp.where(documents[d] > 0)[0]
             for w in words_exist_idx:
                 theta_phi_sum = 0.0
-                for k in xrange(self.n_topics):
+                for k in range(self.n_topics):
                     theta_phi_sum += self.theta[d,k] * self.phi[k,w]
                 perplexity -= sp.log(theta_phi_sum)
 
@@ -225,7 +221,7 @@ class CGSLDA():
         words_exist_idx = sp.where(document > 0)[0]
         for w in words_exist_idx:
             theta_phi_sum = 0.0
-            for k in xrange(self.n_topics):
+            for k in range(self.n_topics):
                 theta_phi_sum += theta[k] * phi[k,w]
             perplexity -= sp.log(theta_phi_sum)
 

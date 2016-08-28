@@ -1,18 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file beat_spectrum.py
-@brief beat spectrum implementation
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import scipy as sp
 from pylufia.signal.spectral import *
 from pylufia.mir.feature.structure import *
 from pylufia.mir.feature import *
+from pylufia.signal.segment import *
 import functools
 import itertools
 import time
@@ -38,13 +30,13 @@ def beat_spectrum_foote(input, framesize=256, hopsize=128, fs=44100, bpm=120.0, 
     # X = X[:,1:] - X[:,:-1]
     X = X.T
 
-    X = smoothByBeat(X, framesize, hopsize, fs, bpm, n_beat_seg)
+    X = normalize_time_axis_by_bpm(X, framesize, hopsize, fs, bpm, n_beat_seg)
 
     # similarity matrix
     t1 = time.clock()
     S = similarity_matrix_cy(X, X, 'cos')
     t2 = time.clock()
-    print 'SM computation: {0}'.format(t2-t1)
+    print( 'SM computation: {0}'.format(t2-t1) )
 
     # l_max = int((len(input)/2 - framesize) / hopsize) + 1
     l_max = S.shape[0]/2
@@ -64,7 +56,7 @@ def beat_spectrum_foote(input, framesize=256, hopsize=128, fs=44100, bpm=120.0, 
         B = B.sum(0)
         
         t2 = time.clock()
-        print 'beat spectrum computation: {0}'.format(t2-t1)
+        print( 'beat spectrum computation: {0}'.format(t2-t1) )
 
     return B
 
@@ -78,7 +70,7 @@ def beat_spectrogram_foote(input, framesize=256, hopsize=128, fs=44100, bpm=120.
     X = sp.log10(X+0.000001)
     X = X.T
 
-    X = smoothByBeat(X, framesize, hopsize, fs, bpm, n_beat_seg)
+    X = normalize_time_axis_by_bpm(X, framesize, hopsize, fs, bpm, n_beat_seg)
 
     # similarity matrix
     S = similarity_matrix_cy(X, X, 'cos')
@@ -90,7 +82,7 @@ def beat_spectrogram_foote(input, framesize=256, hopsize=128, fs=44100, bpm=120.
     end_pos = int(group)
     BS = sp.zeros( (n_frames, (end_pos-start_pos)/2) )
     for i in xrange(n_frames):
-        print i #debug
+        print(i) #debug
         start_pos = int(i*hop)
         end_pos = min(hop*i+group,S.shape[0])
 
@@ -148,7 +140,7 @@ def beat_spectrogram_kurth(input, framesize=512, hopsize=256, fs=44100, window='
         else:
             Y[t,p] = N[t]
     t2 = time.clock()
-    print t2-t1
+    print(t2-t1)
 
     ## Compute beat spectrum
     t1 = time.clock()
@@ -165,7 +157,7 @@ def beat_spectrogram_kurth(input, framesize=512, hopsize=256, fs=44100, window='
         B[t] = (B[t] - B[t].min())
         B[t] /= B[t].max() + 0.0000001
     t2 = time.clock()
-    print t2-t1
+    print(t2-t1)
     
     return B
 

@@ -2,8 +2,8 @@
 
 import scipy as sp
 from scipy.fftpack.realtransforms import dct
-from pylufia.signal.spectral import *
-from pylufia.mir.feature import *
+import pylufia.signal.spectral as sigspe
+import pylufia.mir.feature as feature
 
 
 def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
@@ -22,13 +22,12 @@ def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
     Returns:
       filterBank: ndarray
         mel-filterbank
-      fCenters: ndarray
+      f_centers: ndarray
         center frequencies of mel-filterbank
     """
     # freq_max = fs / 2 # ナイキスト周波数
-    # freq_max = 10000
     mel_max = _hz2mel(freq_max) # ナイキスト周波数 (mel-scale)
-    n_freqs = framesize / 2 + 1 # 周波数インデックスの最大数
+    n_freqs = int(framesize / 2) + 1 # 周波数インデックスの最大数
     n_bins = int(n_freqs * freq_max*2 / float(fs))
     # reso_freq = freq_max*2 / float(framesize) # 周波数解像度
     reso_freq = freq_max / float(n_bins) # 周波数解像度
@@ -48,8 +47,8 @@ def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
     fidx_lowers = ( f_lowers / float(fs/2) * n_freqs ).astype('int')
     fidx_uppers =  ( f_uppers / float(fs/2) * n_freqs ).astype('int')
 
-    filterbank = sp.zeros((n_ceps, n_freqs))
-    for n in xrange(n_ceps):
+    filterbank = sp.zeros( (n_ceps, n_freqs) )
+    for n in range(n_ceps):
         inc = 1.0 / (fidx_centers[n] - fidx_lowers[n])
         idxs = sp.arange(fidx_lowers[n], fidx_centers[n])
         filterbank[n, fidx_lowers[n]:fidx_centers[n]] = (idxs - fidx_lowers[n]) * inc
@@ -59,12 +58,12 @@ def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
 
     return filterbank, f_centers
     
-def mel_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window='hamming', freq_max=22050, n_ceps=22):
+def mel_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window="hamming", freq_max=22050, n_ceps=22):
     """
     Calculate Mel-scale spectrogram
     
     Parameters:
-      inData: ndarray
+      x: ndarray
         input signal
       framesize: int
         framesize
@@ -77,22 +76,23 @@ def mel_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window='hamming', 
       result: ndarray
         mel-scaled spectrogram
     """
+
     # Spectrogram
-    S,F,T = stft(x, framesize, hopsize, fs, window)
+    S,F,T = sigspe.stft(x, framesize, hopsize, fs, window)
     S = sp.absolute(S)
 
     # mel-spectrum
-    mel_filterbank,f_centers = _make_mel_filterbank(n_ceps, fs, framesize, freq_max)
+    mel_filterbank,center_freqs = _make_mel_filterbank(n_ceps, fs, framesize, freq_max)
     mel_spe = sp.dot(S.T, mel_filterbank.T)
 
-    return mel_spe
+    return mel_spe,center_freqs
 
-def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22050, n_ceps=13):
+def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22050, n_ceps=13, preemp=False):
     """
     Calculate MFCC
     
     Parameters:
-      inData: ndarray
+      x: ndarray
         input signal
       framesize: int
         framesize
@@ -100,7 +100,7 @@ def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22
         hopsize
       fs: int
         samplingrate
-      nCeps: int
+      n_ceps: int
         number of dimensions of MFCC
     
     Returns:
@@ -108,21 +108,24 @@ def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22
         mfcc
     """
     # プリエンファシス
-    # coef = 0.97
-    # xemp = _pre_emphasis(x, coef)
+    if preemp:
+        coef = 0.97
+        xemp = _pre_emphasis(x, coef)
+    else:
+        xemp = x
 
     # mel-scale spectrogram
-    mel_spe = sp.log( mel_spectrogram(x, framesize, hopsize, fs, window, max_freq, n_ceps) )
+    mel_spe,center_freqs = mel_spectrogram(xemp, framesize, hopsize, fs, window, max_freq, n_ceps)
+    mel_spe = sp.log(mel_spe+1e-10)
 
     # DCT (ケプストラムに変換=MFCC)
     ceps = dct(mel_spe, type=2, norm="ortho", axis=-1)[:, :n_ceps]
 
     # nan check & inf check
-    ceps = checkNaN2D(ceps)
-    ceps = checkInf2D(ceps)
+    ceps = feature.check_nan_2d(ceps)
+    ceps = feature.check_inf_2d(ceps)
 
-    return ceps
-
+    return ceps,center_freqs
 
 def _pre_emphasis(input, coef):
     """

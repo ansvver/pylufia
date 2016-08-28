@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file mds.py
-@brief MDS(MultiDimensional Scaling)
-@author ふぇいと (@stfate)
+mds.py
 
-@description
-
+MDSの実装
 """
 
 import scipy as sp
@@ -31,23 +28,17 @@ def mds(SM):
     
     # 距離の2乗行列を作成
     D = SM * SM
-    print "D={}".format(D)
 
     # 中心化行列
     one = sp.eye(N) - sp.ones((N, N)) / N
-    print "one={}".format(one)
 
     # ヤング・ハウスホルダー変換
     P = -0.5 * one * D * one # これだと要素積になってしまうのでは？
     # P = -0.5 * sp.dot( sp.dot(one, D), one )
-    print "P={}".format(P)
 
     # 固有値分解
     W, V = sp.linalg.eig(P)
     ind = sp.argsort(W)
-    print "W={}".format(W)
-    print "V={}".format(V)
-    print "ind={}".format(ind)
     x1 = ind[-1]
     x2 = ind[-2]
     

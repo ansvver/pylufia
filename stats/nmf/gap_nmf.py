@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-@file gap_nmf.py
-@brief GaPNMF
-@author ふぇいと (@stfate)
+gap_nmf.py
 
-@description
 GaP-NMF(Gamma Process NMF)の実装．
 
 M.D.Hoffman, ''Bayesian Nonparametric Matrix Factorization for Recorded Music''
@@ -85,15 +82,15 @@ class GaPNMF():
         """
         self.initialize_parameters(supervised=False)
 
-        for it in xrange(n_iter):
-            print 'iterates: {0}'.format(it)
+        for it in range(n_iter):
+            print( 'iterates: {0}'.format(it) )
 
             self._update_h()
             self._update_w()
             self._update_theta()
 
             D = self.KLdivergence()
-            print 'KLD={0}'.format(D)
+            print( 'KLD={0}'.format(D) )
 
         self._clearBadK()
 
@@ -114,8 +111,8 @@ class GaPNMF():
 
         self.initialize_parameters(supervised=True)
 
-        for it in xrange(n_iter):
-            print 'iterates: {0}'.format(it)
+        for it in range(n_iter):
+            print( 'iterates: {0}'.format(it) )
 
             self._update_h(supervised=True)
             self._update_theta(supervised=True)
@@ -124,7 +121,7 @@ class GaPNMF():
                 self._update_w(goodk=goodk)
 
             D = self.KLdivergence()
-            print 'KLD={0}'.format(D)
+            print( 'KLD={0}'.format(D) )
 
         H = self.Eh
         # theta = self.Et

@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file som.py
-@brief SOM (Self-Organizing Map)
-@author ふぇいと (@stfate)
+som.py
 
-@description
-
+SOM(Self Organizing Map)の実装
 """
 
 import scipy as sp
 import scipy.linalg as linalg
-
 
 def som( data , nx, ny, plotLabels = None):
     '''
@@ -41,7 +37,7 @@ def som( data , nx, ny, plotLabels = None):
     nData, nDim = data.shape
     IDX = sp.zeros( nData )
     weightVec = sp.zeros( (len(X),nDim ) )
-    for i in xrange( len(X) ):
+    for i in range( len(X) ):
         weightVec[i,:] = data[ i%nData, : ]
     weightVec += sp.randn(  len(X), nDim) * data.std(0)[sp.newaxis,:] * 0.01 #+ data.mean(0)[sp.newaxis,:]
     
@@ -49,9 +45,9 @@ def som( data , nx, ny, plotLabels = None):
     alpha = 1.0 #0.99999
     r = float( nx*nx+ny*ny  )
     iPrev=sp.zeros_like(IDX)
-    for it in xrange(100):
+    for it in range(100):
         # print it
-        for i in xrange(nData):
+        for i in range(nData):
             diff = data[i,:] - weightVec[:,:]
             distance = (diff*diff).sum(1)
             bmu = distance.argmin()
@@ -68,16 +64,16 @@ def som( data , nx, ny, plotLabels = None):
         r *= 0.91
         
         if (plotLabels):
-            print IDX.astype('int')
+            print( IDX.astype('int') )
             pp.clf()
-            for i in xrange( len(IDX)) :
+            for i in range( len(IDX)) :
                 #print IDX[i],X[IDX[i]], Y[IDX[i]]
                 pp.text( sp.randn(1)*0.01 + X[IDX[i]], sp.randn(1)*0.01 + Y[IDX[i]], plotLabels[i] )
             pp.xlim( X.min(),X.max())
             pp.ylim( Y.min(), Y.max() )
             pp.title('a={0}; r= {1}'.format(alpha,sp.sqrt(r)) )
             pp.savefig('data/img/som.{0}.png'.format(it))
-    for i in xrange(nData):
+    for i in range(nData):
         d = sp.sqrt( ((weightVec-data[i,:])*(weightVec-data[i,:])).sum(1) )
         IDX[i] = d.argmin()
         # print IDX[i]

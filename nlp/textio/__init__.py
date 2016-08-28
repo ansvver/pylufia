@@ -9,4 +9,4 @@
 
 """
 
-from text_reader import *
+from .text_reader import *

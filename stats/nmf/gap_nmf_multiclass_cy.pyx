@@ -1,24 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-@file gap_nmf_multiclass_cy.py
-@brief GaPNMF (multiclass basis version)
-@author ふぇいと (@stfate)
-
-@description
-GaP-NMF(Gamma Process NMF)の実装．
-
-M.D.Hoffman, ''Bayesian Nonparametric Matrix Factorization for Recorded Music''
-をほぼそのまま実装
+GaPNMF for multiclass data cython implementation
 """
 
 cimport cython
 import numpy as np
 cimport numpy as np
-from pylufia.stats import GIG_cy
+from ymh_mir.stats import GIG_cy
 
 import time
-
 
 class GaPNMF_multiclass_cy():
     def __init__(self, X, n_class=4, aw=0.1, bw=0.1, ah=0.1, bh=0.1, alpha=1.0, c=1.0, K=100, smoothness=100):

@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-@file plsi.py
-@brief pLSI(probabilistic Latent Semantic Indexing) implementation
-@author ふぇいと (@stfate)
+plsi.py
 
-@description
 PLSI(Probabilistic Latent Semantic Indexing)の実装
+* ベイズモデルではないが便宜上bayesフォルダに突っ込んでいる
 """
 
 import scipy as sp
-
 
 class PLSI():
     def __init__(self):
@@ -33,31 +30,31 @@ class PLSI():
         self.p_z_dw = sp.zeros((n_z,n_d,n_w))
 
         # update parameter
-        for it in xrange(n_iter):
-            print it
+        for it in range(n_iter):
+            print(it)
             L = 0.0
 
             # E-step: 各文書dの各単語wについて，トピック分布p(z|d,w)を計算
-            for d in xrange(n_d):
-                for w in xrange(n_w):
+            for d in range(n_d):
+                for w in range(n_w):
                     n_dw = feature[d,w] / float(feature[d].sum())
                     p_dw = 0.0
-                    for z in xrange(n_z):
+                    for z in range(n_z):
                         self.p_z_dw[z,d,w] = self.p_z[z] * self.p_d_z[d,z] * self.p_w_z[w,z]
                         p_dw += self.p_z[z] * self.p_w_z[w,z] * self.p_d_z[d,z]
                     L += n_dw * sp.log(p_dw)
                     self.p_z_dw[:,d,w] = self._normalize(self.p_z_dw[:,d,w])
 
-            print 'log-prob={0}'.format(L)
+            print( 'log-prob={0}'.format(L) )
 
             # M-step: p(z|d,w)を用いて，p(z),p(d|z),p(w|z)を計算
             self.p_z = sp.zeros(n_z)
             self.p_d_z = sp.zeros((n_d,n_z))
             self.p_w_z = sp.zeros((n_w,n_z))
 
-            for z in xrange(n_z):
-                for d in xrange(n_d):
-                    for w in xrange(n_w):
+            for z in range(n_z):
+                for d in range(n_d):
+                    for w in range(n_w):
                         n_dw = feature[d,w] / float(feature[d].sum())
                         score = self.p_z_dw[z,d,w] * n_dw
                         self.p_z[z] += score

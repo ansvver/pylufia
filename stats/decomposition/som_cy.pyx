@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-@file som_cy.pyx
-@brief SOM (Self-Organizing Map) (cython version)
-@author ふぇいと (@stfate)
+_som.pyx
 
-@description
-
+som.py のCython実装．
 """
 
 import cython
 import numpy as np
 cimport numpy as np
-
 
 def som_cy( np.ndarray[double, ndim=2] data, int nx, int ny, plotLabels = None ):
     '''
@@ -63,7 +59,7 @@ def som_cy( np.ndarray[double, ndim=2] data, int nx, int ny, plotLabels = None )
     # iPrev=sp.zeros_like(IDX)
     cdef int it = 0
     for it from 0 <= it < 100:
-        print it
+        print(it)
         for i from 0 <= i < nData:
             diff = data[i,:] - weightVec[:,:]
             # distance = (diff*diff).sum(1)

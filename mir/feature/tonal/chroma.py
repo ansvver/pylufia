@@ -7,8 +7,8 @@ Tonal feature extractors
 """
 
 import scipy as sp
-from celes.signal.spectral import *
-from celes.mir.feature.common import *
+from pylufialib.signal.spectral import *
+from pylufialib.feature.common import *
 
 
 def semitone_pow(input, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=1400):
@@ -33,7 +33,7 @@ def semitone_pow(input, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=140
       result: ndarray
         semitone power
     """
-    S,F,T = stft(input, framesize, hopsize, fs, "hamming")
+    S,F,T = stft(input, framesize, hopsize, fs, 'hann')
     S = sp.absolute(S) ** 2
 
     n_frames = S.shape[1]
@@ -43,9 +43,9 @@ def semitone_pow(input, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=140
     
     fidx_min = sp.where(F <= fmin)[0][0] + 1
     fidx_max = sp.where(F > fmax)[0][0] - 1
-    for frm in xrange(n_frames):
+    for frm in range(n_frames):
         #for f in xrange(S.shape[0]):
-        for f in xrange(fidx_min, fidx_max):
+        for f in range(fidx_min, fidx_max):
             if semitone_idx[f] >= 0:
                 STP[frm, semitone_idx[f]] += S[f, frm]
                 
@@ -75,12 +75,12 @@ def semitone_pow(input, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=140
 
     #return semitonePowData
 
-def chroma(x, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=1400):
+def chroma(input, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=1400):
     """
-    Compute chroma vector
+    Calculate chroma vector
     
     Parameters:
-      x: ndarray
+      inData: ndarray
         input signal
       framesize: int
         framesize
@@ -97,13 +97,18 @@ def chroma(x, framesize=2048, hopsize=512, fs=44100, fmin=50, fmax=1400):
       result: ndarray
         chroma vector
     """
-    semitone_pow_data = semitone_pow(x, framesize, hopsize, fs, fmin, fmax)
-    n_frames,n_semitones = semitone_pow_data.shape
+    semitone_pow_data = semitone_pow(input, framesize, hopsize, fs, fmin, fmax)
+    n_frames = semitone_pow_data.shape[0]
+    n_semitones = semitone_pow_data.shape[1]
+
     chroma_data = sp.zeros( (n_frames, 12) )
 
-    for j in xrange(n_semitones):
+    for j in range(n_semitones):
         chroma_data[:, j%12] += semitone_pow_data[:, j]
-    chroma_data = _normalize_chroma(chroma_data)
+        
+    #chromaData = sp.log10(chromaData)
+    # chromaData = _normChroma(chromaData)
+    chroma_data = checkNaN2D(chroma_data)
 
     return chroma_data
 
@@ -121,14 +126,14 @@ def _freq2semitone(f):
     if f < 32.70: # min=C0
         return -1
     else:
-        return int( sp.around( 21.0 + 12.0 * sp.log2(f/110.0) ) )
+        return int(sp.around(21.0 + 12.0 * sp.log2(f/110.0)))
 
-def _normalize_chroma(input):
+def _normChroma(input):
     """
     chroma正規化(全次元の総和=1)
     """
-    for i in xrange(input.shape[0]):
+    for i in range(input.shape[0]):
         frm_sum = sum(input[i])
-        input[i] /= float(frm_sum+1e-10)
+        input[i] /= float(frm_sum)
 
     return input

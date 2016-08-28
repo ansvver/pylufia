@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-@file __init__.py
-@brief __init__ of audioio package
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Audio I/O __init__
+====================================================================
 """
 
-from wavfile import *
-from common import *
-from player import *
+from .wavfile import *
+from .common import *
+# from player import *

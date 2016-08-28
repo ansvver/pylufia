@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file pca.py
-@brief PCA (Principal Component Analysis)
-@author ふぇいと (@stfate)
+pca.py
 
-@description
-
+PCAの実装
 """
 
 import scipy as sp
@@ -22,7 +19,7 @@ class PCA():
 
     def train(self, X):
         # データの中心化
-        self.X_mean = sp.mean(X, axis=0)
+        self.X_mean = X.mean(0)
         X_centered = X - self.X_mean
 
         # 分散共分散行列の作成

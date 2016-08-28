@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-@file iirfilter.py
-@brief IIR filter computation functions
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Filter
+====================================================================
 """
 
 import scipy as sp
 
 
-def iir_calc_coef_fs(q=3.0, f=440.0, g=2.0, type='lpf2', fs=44100):
+def calc_coef_fs(q=3.0, f=440.0, g=2.0, type='lpf2', fs=44100):
     """
     Calculate IIR Filter coefficients
     
@@ -276,7 +273,7 @@ def iir_calc_coef_fs(q=3.0, f=440.0, g=2.0, type='lpf2', fs=44100):
 
     return b, a
 
-def iir_calc_coef(q, f, g, type):
+def calc_coef(q, f, g, type):
     """
     Calculate IIR Filter coefficients (fs=44.1kHz fixed)
     
@@ -298,9 +295,9 @@ def iir_calc_coef(q, f, g, type):
       a: ndarray
         filter coefficient a
     """
-    return iir_calc_coef_fs(q, f, g, type, 44100.0)
+    return iirCalcCoefFs(q, f, g, type, 44100.0)
 
-def iir_apply(input, b, a):
+def apply(input, b, a):
     """
     Apply IIR filter
     

@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@file labeled_lda.py
-@brief Labeled LDA implementation
-@author ふぇいと (@stfate)
-
-@description
+Labeled LDA
 
 """
 
@@ -48,7 +44,7 @@ class LabeledLDA():
     def _initialize_parameters(self):
         self.W = 0
 
-        for d in xrange(self.n_docs):
+        for d in range(self.n_docs):
             self.topics[d,:] = sp.random.randint(0, self.n_labels, self.n_words)
             exist_words_idx = sp.where(self.documents[d] > 0)[0]
             n_words_cur = len(exist_words_idx)
@@ -65,23 +61,18 @@ class LabeledLDA():
         self._initialize_parameters()
 
         P_arr = sp.zeros(n_iter)
-        for it in xrange(n_iter):
+        for it in range(n_iter):
             self._update_counters()
             self._update_parameters()
 
-            print 'phi:'
-            print self.phi
-            print 'theta:'
-            print self.theta
-
             P = self.perplexity()
             P_arr[it] = P
-            print 'iterates: {} perplexity={}'.format(it,P)
+            print( 'iterates: {} perplexity={}'.format(it,P) )
 
         return P_arr
 
     def _update_counters(self):
-        for d in xrange(self.n_docs):
+        for d in range(self.n_docs):
             exist_words_idx = sp.where(self.documents[d] > 0)[0]
             for w in exist_words_idx:
                 k = self.topics[d,w]
@@ -115,11 +106,11 @@ class LabeledLDA():
     def perplexity(self):
         perplexity = 0.0
 
-        for d in xrange(self.n_docs):
+        for d in range(self.n_docs):
             words_exist_idx = sp.where(self.documents[d] > 0)[0]
             for w in words_exist_idx:
                 theta_phi_sum = 0.0
-                for k in xrange(self.n_labels):
+                for k in range(self.n_labels):
                     theta_phi_sum += self.theta[d,k]*self.phi[k,w]
                 perplexity -= sp.log(theta_phi_sum)
 

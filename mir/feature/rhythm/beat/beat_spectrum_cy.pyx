@@ -1,25 +1,17 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file beat_spectrum_cy.pyx
-@brief beat spectrum implementation (cython version)
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import cython
 import numpy as np
 cimport numpy as np
 from scipy import interpolate
 
-from pylufia.signal.spectral import *
-from pylufia.mir.feature.structure import *
-from pylufia.mir.feature.spectral import *
-from pylufia.mir.feature.common import *
-import pylufia.signal.filter as filter
-import pylufia.signal as signal
+from ymh_mir.signal.spectral import *
+from ymh_mir.mir.feature.structure import *
+from ymh_mir.mir.feature.spectral import *
+from ymh_mir.mir.feature.common import *
+import ymh_mir.signal.filter.iir as iir
+import ymh_mir.signal as signal
+import ymh_mir.signal.segment as segment
 
 import itertools
 import time
@@ -69,6 +61,66 @@ def beat_spectrum_cy(x, framesize=512, hopsize=256, fs=44100, window='hann'):
     #B /= B.sum() + 1e-10
     B /= B[0]
     
+    return B
+
+def beat_spectrum_bpm_normalized_cy(x, bpm, n_lags, framesize=512, hopsize=256, fs=44100, window='hann'):
+    """
+    Beat spectrogramの実装
+    (Kurth, ''The Cyclic Beat Spectrum: Tempo-Related Audio Features for Time-Scale Invariant Audio Identification''のスペクトル差分を用いたもの)
+    """
+    cdef double alpha = 0.5
+    cdef double min_bpm = 15.0
+    cdef double max_bpm = 320.0
+    cdef double r_len = 10.0
+    cdef int beatunit = n_lags
+
+    ## Compute novelty curve
+    X,F,T = stft(x, framesize, hopsize, fs, window)
+    X = np.absolute(X)
+    Xsm = segment.normalize_time_axis_by_bpm(X.T, bpm, beatunit, framesize, hopsize, fs).T
+    dXsm = Xsm[:,1:] - Xsm[:,:-1]
+    dXsm[sp.where(dXsm<0)] = 0
+    N = dXsm.sum(0)
+    #dX = X[:,1:] - X[:,:-1]
+    #dX[sp.where(dX < 0)] = 0
+    #dXsm = segment.smoothByBpm(dX.T, bpm, beatunit, framesize, hopsize, fs).T
+    #N = dXsm.sum(0)
+
+    ## Apply comb filter
+    n_frames_per_beat = ( ( 60.0/bpm * fs / (beatunit/4) ) ) / float(hopsize)
+    p_start = np.ceil( (60.0/max_bpm * fs - framesize) / float(hopsize) / n_frames_per_beat ).astype('int')
+    p_end = np.ceil( (60.0/min_bpm * fs - framesize) / float(hopsize) / n_frames_per_beat ).astype('int')
+    # nP = p_end+1 - p_start
+    cdef int nP = p_end
+    cdef int nT = len(N)
+    cdef np.ndarray[double,ndim=2] Y = np.zeros( (nT, nP), dtype=np.double )
+    Y[:,0] = N
+
+    cdef int p,t
+    # for p,t in itertools.product(xrange(1,nP), xrange(nT)):
+    for p in range(1,nP):
+        for t in range(nT):
+            if t > p:
+                Y[t,p] = (1-alpha) * N[t] + alpha * Y[t-p,p]
+            else:
+                Y[t,p] = N[t]
+
+    ## Compute beat spectrum
+    #cdef int r = int( (r_len*fs - framesize) / hopsize )
+    cdef int r = int( (r_len*fs - framesize) / float(hopsize) / n_frames_per_beat )
+    B = (Y[:2*r,:]**2).mean(0) # Y(t-r:t+r)にすべき
+
+    ## BS値が0以上&総和1になるように正規化
+    #B = (B - B.min())
+    #B /= B.sum() + 1e-10
+    B /= B[0]
+    B = B[:beatunit]
+    
+    return B
+
+def beat_spectrum_bpm_normalized_force20sec_cy(x, bpm, n_lags, framesize=512, hopsize=256, fs=44100, window='hann'):
+    x = _repeat_wave_to_20sec(x, fs)
+    B = beat_spectrum_bpm_normalized_cy(x, bpm, n_lags, framesize, hopsize, fs, window)
     return B
 
 def beat_spectrum_force20sec_cy(x, framesize=512, hopsize=256, fs=44100, window='hann'):
@@ -233,6 +285,6 @@ def decimate_beat_spectrum(BS, n_dim=64):
 
 def _repeat_wave_to_20sec(x, fs):
     #n_repeats = np.ceil(fs*32.0 / len(x)).astype('int')
-    n_repeats = np.ceil(fs*20.0 / len(x)).astype('int')
+    n_repeats = np.ceil(fs*10.0 / len(x)).astype('int')
     y = np.tile(x, n_repeats)
     return y

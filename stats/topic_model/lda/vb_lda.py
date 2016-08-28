@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@file vb_lda.py
-@brief Variational Bayes LDA
-@author ふぇいと (@stfate)
-
-@description
-
+LDA(Latent Dirichlet Allocation)の実装
 """
 
 import scipy as sp
@@ -50,8 +45,8 @@ class VBLDA():
         for d,k in itertools.product(xrange(self.D),xrange(self.K)):
             self.gam[d,k] = self.alpha[k] + self.N/float(self.K)
 
-        for it in xrange(self.n_iter):
-            print 'iterates: {0}'.format(it)
+        for it in range(self.n_iter):
+            print( 'iterates: {0}'.format(it) )
 
             ## E-step: phiとgammaを更新
             t1 = time.clock()
@@ -67,7 +62,7 @@ class VBLDA():
             
             self.e_step()
             t2 = time.clock()
-            print 'time for e-step: {0}[s]'.format(t2-t1)
+            print( 'time for e-step: {0}[s]'.format(t2-t1) )
 
             # print 'phi:{0}\ngamma:{0}\n'.format(self.phi, self.gam)
 
@@ -86,9 +81,9 @@ class VBLDA():
             # self.alpha = self.newton_alpha(self.vb_gamma, 20, self.alpha)
             self.m_step()
             t2 = time.clock()
-            print 'time for m-step: {0}[s]'.format(t2-t1)
+            print( 'time for m-step: {0}[s]'.format(t2-t1) )
 
-            print 'alpha:{0}\nbeta:{1}\n'.format(self.alpha,self.beta)
+            print( 'alpha:{0}\nbeta:{1}\n'.format(self.alpha,self.beta) )
             # L = self.likelihood()
             # L = _lda.likelihood_cy(self.documents, self.vb_gamma, self.vb_phi, self.alpha, self.beta, self.K)
             # print 'log likelihood={}'.format(L)
@@ -108,10 +103,10 @@ class VBLDA():
         #     gamma[d] = alpha + phi[d].sum(0)
 
         gam_sums = self.gam.sum(1)
-        for n in xrange(N):
+        for n in range(N):
             wns = self.documents[:,n]
             phi_sum[:] = 0.0
-            for k in xrange(self.K):
+            for k in range(self.K):
                 # print 'Wn:'
                 # print wns
                 # print 'Beta:'
@@ -133,9 +128,9 @@ class VBLDA():
         cur_phi = sp.zeros((D,N), dtype=sp.double)
         wj_arr = sp.zeros((D,N), dtype=sp.double)
 
-        for i in xrange(self.K):
+        for i in range(self.K):
             cur_phi = self.phi[:,:,i]
-            for j in xrange(N):
+            for j in range(N):
                 wj_arr[:,:] = 0.0
                 wj_arr[:,j] = self.documents[:,j]
                 self.beta[i,j] = (cur_phi * wj_arr).sum()
@@ -160,8 +155,8 @@ class VBLDA():
 
         D = self.documents.shape[0]
         L = 0.0
-        for d in xrange(D):
-            print d
+        for d in range(D):
+            print(d)
             cur_doc = self.documents[d]
             cur_phi = self.phi[d]
             cur_gam = self.gam[d]
@@ -173,15 +168,15 @@ class VBLDA():
             E_logp_z_theta = 0.0
             N = cur_phi.shape[0]
             K = cur_phi.shape[1]
-            for n in xrange(N):
-                for k in xrange(K):
+            for n in range(N):
+                for k in range(K):
                     E_logp_z_theta += cur_phi[n,k] * (digamma(cur_gam[k])-digamma(cur_gam.sum()))
         
             # E(log(p(w|z,beta)))
             E_logp_w_z_beta = 0.0
-            for n in xrange(N):
-                for i in xrange(K):
-                    for j in xrange(N):
+            for n in range(N):
+                for i in range(K):
+                    for j in range(N):
                         if n == j:
                             wn = cur_doc[j]
                         else:
@@ -211,7 +206,7 @@ class VBLDA():
         # alpha /= alpha.sum()
         alpha = init_alpha.copy()
 
-        for it in xrange(n_iter):
+        for it in range(n_iter):
             alpha0 = alpha.sum()
             g = D * (digamma(alpha0) - digamma(alpha)) + pg
             h = -1.0 / trigamma(alpha)

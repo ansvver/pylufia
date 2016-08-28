@@ -26,7 +26,7 @@ def vb_nmf(X, a_w, b_w, a_h, b_h, n_iter=100):
     Eh = Hinit
 
     # update Lw,Ew,Lh,Eh
-    for it in xrange(n_iter):
+    for it in range(n_iter):
 
 
 

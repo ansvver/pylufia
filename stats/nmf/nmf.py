@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-@file nmf.py
-@brief NMF
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+NMF functions
+====================================================================
 """
 
 import scipy as sp
 # import matplotlib.pyplot as pp
 
 
-def nmf_euclid(X, n_basis, conv_thres):
+def nmf_euclid(X, n_basis, conv_thres, n_iter):
     """
     Calculate NMF using euclid distance
     (Implemented by Maezawa-san)
@@ -45,12 +42,16 @@ def nmf_euclid(X, n_basis, conv_thres):
     na = sp.newaxis
 
     # 本筋
-    while ratio > conv_thres:
+    # while ratio > conv_thres:
+    #     W *= sp.dot(X, H.T) / sp.dot(W, sp.dot(H, H.T))
+    #     H *= sp.dot(W.T, X) / sp.dot(sp.dot(W.T, W), H)
+
+    #     cost_cur = ( (X - (W[:, :, na] * H[na, :, :]).sum(1))**2 ).sum()
+    #     ratio, cost = (cost-cost_cur)/cost_cur , cost_cur
+    for it in range(n_iter):
+        # print it
         W *= sp.dot(X, H.T) / sp.dot(W, sp.dot(H, H.T))
         H *= sp.dot(W.T, X) / sp.dot(sp.dot(W.T, W), H)
-
-        cost_cur = ( (X - (W[:, :, na] * H[na, :, :]).sum(1))**2 ).sum()
-        ratio, cost = (cost-cost_cur)/cost_cur , cost_cur
 
     return W, H
     
@@ -120,13 +121,13 @@ def nmf_is(X, n_basis, n_iter):
     W = (sp.rand( nF, n_basis ) + 10)*X.mean()
     # dot = scipy.dot
     pISD = 1e100
-    for it in xrange(n_iter):
+    for it in range(n_iter):
         idWH = 1.0/sp.dot(W,H)
         print it
         isd = X*idWH
         isd = (isd - sp.log(isd)-1).sum()
         
-        print 'ISD={0}'.format(isd)
+        print( 'ISD={0}'.format(isd) )
         #if (pISD-isd < 10) :
         #    print 'converged'
         #    break
@@ -172,7 +173,7 @@ def nmf_is_activation(X, W, n_iter = 20):
     nF, nT = X.shape
     H = sp.ones( (n_basis,nT) )
     # dot = sp.dot
-    for it in xrange(n_iter):
+    for it in range(n_iter):
         idWH = 1.0/sp.dot(W,H)
 
         isd = X*idWH

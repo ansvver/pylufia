@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-@file kmeans_cy.pyx
-@brief kmeans clustering (cython version)
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Cython implementation of k-means++ clustering
+====================================================================
 """
 
 import cython
 import numpy as np
 cimport numpy as np
-import pylufia.stats.distance as distance
+import ymh_mir.stats.distance as distance
 
 
 def kmeans_cy(features, n_clusters=2, max_iter=100, init="pp"):
@@ -54,8 +51,8 @@ def kmeans_cy(features, n_clusters=2, max_iter=100, init="pp"):
     old_labels = np.zeros(n_obs, dtype=np.int32)
     
     # k-meansクラスタリングiteration
-    for it in xrange(max_iter):
-        print "iterates: {}".format(it)
+    for it in range(max_iter):
+        print( "iterates: {}".format(it) )
 
         # 直前のクラスタ分割を保存
         old_labels = labels.copy()
@@ -106,7 +103,7 @@ cdef _init(features, n_clusters, method="random"):
         labels = (np.random.rand(n_obs) * n_clusters).astype(np.int32)
         
         # 初期セントロイド 
-        for k in xrange(n_clusters):
+        for k in range(n_clusters):
             subset = features[np.where(labels == k)]
             centers[k] = np.mean(subset, axis=0)
     # kmeans++
@@ -115,8 +112,8 @@ cdef _init(features, n_clusters, method="random"):
         n_clusters_choosed = 1
         D = np.zeros(n_obs, dtype=float)
         while (n_clusters_choosed < n_clusters):
-            for obs in xrange(n_obs):
-                cur_center,cur_dist = _find_nearest_center(features[obs], centers[:n_clusters_choosed])
+            for obs in range(n_obs):
+                cur_center,cur_dist = _findNearestCenter(features[obs], centers[:n_clusters_choosed])
                 D[obs] = cur_dist
             P = D**2 / (D**2).sum()
             next_center_idx = np.random.choice(n_obs, 1, p=P)
@@ -125,7 +122,7 @@ cdef _init(features, n_clusters, method="random"):
 
     return labels,centers
 
-cdef _find_nearest_center(feature, centers):
+cdef _findNearestCenter(feature, centers):
     n_clusters = centers.shape[0]
     D = np.zeros(n_clusters, dtype=float)
     for i,center in enumerate(centers):
@@ -168,7 +165,7 @@ cdef _update_centroid(np.ndarray[double,ndim=2] features, np.ndarray[int,ndim=1]
     cdef int n_dim = features.shape[1]
     cdef np.ndarray[double,ndim=2] center = np.zeros( (n_clusters,n_dim), dtype=np.double )
 
-    for k in xrange(n_clusters):
+    for k in range(n_clusters):
         subset = features[np.where(label == k)]
         if subset.size > 0:
             center[k] = subset.mean(0)

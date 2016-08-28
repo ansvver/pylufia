@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file distance_cy.pyx
-@brief distance calculation functions (cython)
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Cython implementation of distance.py
+====================================================================
 """
 
 import cython
@@ -46,7 +43,7 @@ def euclid_dist_2d_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y
     """
     euclid距離の計算(2次元ベクトル同士)
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
     d = np.mean([euclid_dist_cy(x,y) for x, y in zip(RX,RY)])
     
@@ -100,7 +97,7 @@ def cos_dist_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
     """
     cos距離の計算(2次元ベクトル同士)
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     
     d = np.mean([cos_dist_cy(x, y) for x,y in zip(RX,RY)])
     # d = np.amax([cos_dist_cy(x, y) for x,y in zip(RX,RY)])
@@ -109,14 +106,14 @@ def cos_dist_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
     return d
 
 def cos_dist_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     RX = RX.T
     RY = RY.T
     d = np.mean( [cos_dist_cy(x,y) for x,y in zip(RX,RY)] )
     return d
 
 def inv_cos_dist_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
 
     RXinv = 1.0 / (RX+1e-50)
     RYinv = 1.0 / (RY+1e-50)
@@ -126,14 +123,14 @@ def inv_cos_dist_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y)
     return d
 
 def inv_cos_dist_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     RX = RX.T
     RY = RY.T
     d = np.mean( [inv_cos_dist_cy(x,y) for x,y in zip(RX,RY)] )
     return d
 
 def weighted_cos_dist_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     weight = (RX+RY).sum(1)
     weight /= weight.sum()
     d = np.mean([cos_dist_cy(x, y)*weight[i] for i,(x,y) in enumerate(zip(RX,RY))])
@@ -186,6 +183,9 @@ def corrcoef_cy(np.ndarray[double,ndim=1] x, np.ndarray[double,ndim=1] y):
 
     return score
 
+def corrcoef_inv_cy(np.ndarray[double,ndim=1] x, np.ndarray[double,ndim=1] y):
+    return 1.0 / corrcoef_cy(x, y)
+
 def inv_corrcoef_cy(np.ndarray[double,ndim=1] x, np.ndarray[double,ndim=1] y):
     xinv = 1.0 / (x+1e-50)
     yinv = 1.0 / (y+1e-50)
@@ -195,29 +195,51 @@ def corrcoef_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
     """
     相関係数(2次元arrayに対する)
     """
-    RX,RY = _adjustVectorDimensions(X, Y)
-    d = np.mean( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] )
+    RX,RY = _adjust_vector_dimensions(X, Y)
+    d = np.sum( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] ) / RX.shape[0]
     return d
 
 def corrcoef_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     RX = RX.T
     RY = RY.T
-    d = np.mean( [corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
+    d = np.sum( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] ) / RX.shape[0]
     return d
 
 def inv_corrcoef_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     d = np.mean( [inv_corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
     return d
 
 def inv_corrcoef_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjustVectorDimensions(X, Y)
+    RX,RY = _adjust_vector_dimensions(X, Y)
     RX = RX.T
     RY = RY.T
     d = np.mean( [inv_corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
     return d
 
+def weighted_corrcoef_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y, np.ndarray[double,ndim=1] weight):
+    RX,RY = _adjust_vector_dimensions(X, Y)
+    #if len(weight) < RX.shape[0]:
+    #    weight = np.r_[weight, np.zeros(RX.shape[0]-len(weight))]
+    RX = weight[:,np.newaxis] * RX
+    RY = weight[:,np.newaxis] * RY
+    d = np.mean( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] )
+    return d
+
+def weighted_corrcoef_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y, np.ndarray[double,ndim=1] weight):
+    RX,RY = _adjust_vector_dimensions(X, Y)
+    RX = RX.T * weight[:,np.newaxis]
+    RY = RY.T * weight[:,np.newaxis]
+    d = np.mean( [corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
+    return d
+
+def ccf_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
+    RX,RY = _adjust_vector_dimensions(X, Y)
+    RX = RX.T
+    RY = RY.T
+    d = np.sum( [np.correlate(x,y,mode='valid') for x,y in zip(RX,RY)] ) / (RX.shape[0]*RX.shape[1])
+    return d
 
 def dtw_dist_type1_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y, metric='cos'):
     """
@@ -245,6 +267,8 @@ def dtw_dist_type1_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y
     
     if metric == 'cos':
         dist_func = cos_dist_cy
+    elif metric == 'corrcoef':
+        dist_func = corrcoef_inv_cy
     elif metric == 'euclid':
         dist_func = euclid_dist_cy
     elif metric == 'mahal':
@@ -388,10 +412,38 @@ def dtw_dist_type3_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y
             D[i, j] = dist_func(aryX, aryY) + _min3(D[i-1, j-1], D[i-1, j-2], D[i-2, j-1])
 
     return D[-1, -1]
+
+def KL_divergence_cy(X, Y):
+    d =(Y*(np.log(Y+1e-10)-np.log(X+1e-10))).sum()
+    return d
+
+def KL2_divergence_cy(X, Y):
+    d = 0.5 * KL_divergence_cy(X, Y) + 0.5 * KL_divergence_cy(Y, X)
+    return d
+
+def KL_divergence_2d_cy(X, Y):
+    """
+    KL-divergence
+    """
+    RX,RY = _adjust_vector_dimensions(X, Y)
+    
+    d = ( (RY*(np.log(RY+1e-10)-np.log(RX+1e-10))).sum(1) ).mean()
+    
+    return d
+    
+def KL2_divergence_2d_cy(X, Y):
+    """
+    symmetric KL divergence (KL2)
+
+    対称化したKLダイバージェンス
+    """
+    d = 0.5*KL_divergence_2d_cy(X, Y) + 0.5*KL_divergence_2d_cy(Y, X)
+    
+    return d
     
 """ helper functions """
 
-cdef _adjust_vector_dims(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
+cdef _adjust_vector_dimensions(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
     """
     距離計算する2つの2次元ベクトルの要素数を合わせる
     長い方に合わせ、短い方のベクトルは0詰めする

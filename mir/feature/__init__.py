@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file __init__.py
-@brief __init__ of mir.feature.tonal
-@author ふぇいと (@stfate)
+#-------------------------------------------------------------------------------
+# @file:		feature
+# @brief:
+#
+# @author:		sasai
+# @date:		25/04/2012
+# @copyright:	(c) sasai 2012
+# @license:		<your licence>
+#
+# Description:
+#
+#-------------------------------------------------------------------------------
 
-@description
-
-"""
-
-from common import *
+from .common import *

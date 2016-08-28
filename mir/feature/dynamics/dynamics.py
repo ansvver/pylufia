@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-@file dynamics.py
-@brief Dynamics feature extractors
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Dynamics feature extractors
+====================================================================
 """
 
-from pylufia.signal.segment import *
-from ..mir.feature.common import *
+import pylufia.signal.segment as segment
 import scipy as sp
 
 
@@ -30,7 +26,7 @@ def loudness(input, framesize=1024, hopsize=512):
       result: ndarray
         loudness of inData
     """
-    framed_data = makeFramedData(input, framesize, hopsize, 'hann')
+    framed_data = segment.make_framed_data(input, framesize, hopsize, 'hann')
     
     J = 1000.0
     L = sp.log(1 + J/framesize * sum(framed_data.T ** 2))
@@ -55,7 +51,7 @@ def rms(input, framesize=1024, hopsize=512):
       result: ndarray
         RMS of inData
     """
-    framed_data = makeFramedData(input, framesize, hopsize, 'hann')
+    framed_data = segment.make_framed_data(input, framesize, hopsize, 'hann')
     
     rms = sp.sqrt(sp.mean(framed_data, axis=1)**2)
     

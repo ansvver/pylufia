@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-@file temporal.py
-@brief temporal feature extractors
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Temporal feature extractors
+====================================================================
 """
 
 import scipy as sp
 import scipy.signal as sig
 from pylufia.signal import *
-from pylufia.mir.feature.rhythm import *
+from pylufia.rhythm import *
 
 
 def zerocross_rate(input):
@@ -28,8 +25,7 @@ def zerocross_rate(input):
         zero-crossing rate
     """
     zero_idx = []
-    for i in xrange(len(input)):
-        print input[i]
+    for i in range(len(input)):
         if input[i] == 0:
             zero_idx.append(i)
             
@@ -63,7 +59,7 @@ def temporal_centroid(input, framesize=1024, hopsize=512, fs=44100):
     
     return TC
     
-def log_attack_time(input, framesize=1024, hopsize=512, fs=44100):
+def logAttackTime(input, framesize=1024, hopsize=512, fs=44100):
     """
     Calculate log-attack-time
     

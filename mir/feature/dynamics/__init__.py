@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# @file:		dynamics
+# @brief:
+#
+# @author:		sasai
+# @date:		25/04/2012
+# @copyright:	(c) sasai 2012
+# @license:		<your licence>
+#
+# Description:
+#
+#-------------------------------------------------------------------------------
 
-"""
-@file __init__.py
-@brief __init__ of feature.dynamics
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
-from dynamics import *
+from .dynamics import *

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file spectral.py
-@brief spectral feature extractors
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Spectral feature extractors
+====================================================================
 """
 
 import scipy as sp
@@ -30,7 +27,7 @@ def dim_reduced_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window='ha
     X_dim_reduced = sp.zeros( (n_dims,X.shape[1]) )
     
     f_idx_start = 0
-    for i in xrange(n_dims):
+    for i in range(n_dims):
         f_idx_start += n_fbin_group
         f_idx_end = f_idx_start + n_fbin_group
         # X_dim_reduced[i,:] = sp.mean(X[int(f_idx_start):int(f_idx_end),:], axis=0)
@@ -82,7 +79,7 @@ def octave_spectrogram(x, framesize=1024, hopsize=512, fs=44100, fmin=60, n_per_
     idx_high = (freq_high * framesize/2 / (fs/2)).astype('int')
     
     oct_spe_data = sp.zeros((n_frames, n_dims))
-    for i in xrange(n_dims):
+    for i in range(n_dims):
         oct_spe_data[:, i] = sp.sum(S[idx_low[i]:idx_high[i]+1, :], axis=0)
         
     return oct_spe_data
@@ -143,8 +140,8 @@ def spectral_centroid(x, framesize=1024, hopsize=512, fs=44100):
     SC = (normalized_freq[:,sp.newaxis] * S).sum(0) / S.sum(0)
     
     # nan check & inf check
-    SC = checkNaN1D(SC)
-    SC = checkInf1D(SC)
+    SC = check_nan_1d(SC)
+    SC = check_inf_1d(SC)
 
     return SC
 
@@ -260,13 +257,13 @@ def spectral_skewness(x, framesize=1024, hopsize=512, fs=44100):
     
     n_frames = S.shape[1]
     
-    u = spectralCentroid(x, framesize=framesize, hopsize=hopsize, fs=fs)
+    u = spectral_centroid(x, framesize=framesize, hopsize=hopsize, fs=fs)
     
     m = sp.zeros(n_frames)
-    for i in xrange(n_frames):
+    for i in range(n_frames):
         m[i] = ( (F - u[i])**3 * S[:, i] / S[:, i].sum() ).sum()
         
-    ss = spectralSpread(x, framesize, hopsize, fs)
+    ss = spectral_spread(x, framesize, hopsize, fs)
     
     skewness = m / (ss**3)
     
@@ -299,7 +296,7 @@ def spectral_kurtosis(x, framesize=1024, hopsize=512, fs=44100):
     
     normalized_freq = F
     m = sp.zeros(n_frames)
-    for i in xrange(n_frames):
+    for i in range(n_frames):
         m[i] = ( (normalized_freq - u[i])**4 * S[:, i] / S[:, i].sum() ).sum()
         
     ss = spectral_spread(x, framesize=framesize, hopsize=hopsize, fs=fs)
@@ -354,7 +351,7 @@ def spectral_flatness(x, framesize=1024, hopsize=512, fs=44100):
     n_freq_bands = freq_bands.shape[0]
     
     SFM = sp.zeros( (S.shape[1], n_freq_bands) )
-    for i in xrange(SFM.shape[1]):
+    for i in range(SFM.shape[1]):
         sub_S = S[freq_bands_idx[i,0]:freq_bands_idx[i,1]+1]
         K = sub_S.shape[0]
         SFM[:,i] = sub_S.prod(0) ** (1/float(K)) / sub_S.mean(0)
@@ -391,7 +388,7 @@ def spectral_rolloff(x, framesize=1024, hopsize=512, fs=44100):
 
     sum_P = P.sum(0)
     
-    for i in xrange(P.shape[1]):
+    for i in range(P.shape[1]):
         cur_pow = 0.0
         fc = 0
         for f in xrange(P.shape[0]):
@@ -425,7 +422,7 @@ def spectral_irregularity(x, framesize=1024, hopsize=512, fs=44100):
     S = sp.absolute(S)
     
     out = 0.0
-    for i in xrange(S.shape[1]-1):
+    for i in range(S.shape[1]-1):
         out += (S[:, i+1] - S[:, i]) ** 2
         
     out /= (S**2).sum(1)

@@ -1,17 +1,7 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file bark.py
-@brief barkband feature extractors
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import scipy as sp
 from pylufia.signal.spectral import *
-
 
 def _make_bark_filterbank(fs, framesize):
     """
@@ -30,7 +20,7 @@ def _make_bark_filterbank(fs, framesize):
     
     filterbank = sp.zeros( (n_bark_band, n_freqs) )
     
-    for n in xrange(n_bark_band):
+    for n in range(n_bark_band):
         inc = 1.0 / (fidx_centers[n] - fidx_lowers[n])
         idxs = sp.arange(fidx_lowers[n], fidx_centers[n])
         filterbank[n, fidx_lowers[n]:fidx_centers[n]] = (idxs - fidx_lowers[n]) * inc

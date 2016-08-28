@@ -10,11 +10,12 @@
 """
 
 def loadtxt(fname):
-    txtdata = u""
+    txtdata = ""
 
-    with open(fname, "r") as fid:
+    with open(fname, "r", encoding="utf-8") as fid:
         for line in fid:
-            txtdata += line.decode("utf-8")
-    txtdata = txtdata.encode("utf-8")
+            # txtdata += line.decode("utf-8")
+            txtdata += line
+    # txtdata = txtdata.encode("utf-8")
 
     return txtdata

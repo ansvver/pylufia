@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-@file cepstrum.py
-@brief cepstrum analysis fuunctions
-@author ふぇいと (@stfate)
+cepstrum.py
 
-@description
-
+ケプストラム分析
 """
 
 import scipy as sp
 from pylufia.signal.common import *
-from fft import *
+from .fft import *
 
 
 def cepstrum(x, framesize=256, fs=44100):
@@ -64,7 +61,7 @@ def cepstrogram(x, framesize=512, hopsize=256, window='hann', fs=44100):
     """
     n_frames = int(sp.ceil((len(x) - framesize) / hopsize))
     n_freq = sp.ceil((framesize + 1) / 2.0)
-    framed_x = make_framed_data(x, framesize, hopsize, window)
+    framed_x = makeFramedData(x, framesize, hopsize, window)
     X = cepstrum(framed_x, framesize)
     X = X.T
     

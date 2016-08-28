@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
 
 """
-@file gmm_cy.pyx
-@brief GMM
-@author ふぇいと (@stfate)
+============================================================
+@file   gmm_cy.pyx
+@date   2014/05/07
+@author sasai
 
-@description
+@brief
+Gaussian Mixture Model
 
+============================================================
 """
 
 import numpy as np
 cimport numpy as np
 import scipy.linalg as linalg
 import scipy.misc as spmisc
-from pylufia.stats.cluster import *
+from ymh_mir.stats.cluster import *
 
 
 EPS = np.finfo(float).eps
 
 class GMM_cy():
     """ GMM implementation """
-    def __init__(self, X, n_mixtures=50, n_iter=100, min_covar=1e-3, init='random'):
+    def __init__(self, X, K=50, n_iter=100, min_covar=1e-3, init='random'):
         self.X = X
         self.Xmean = self.X.mean(0)
         self.Xvar = self.X.var(0)
-        self.n_obs = self.X.shape[0]
-        self.n_mixtures = n_mixtures
+        self.N = self.X.shape[0]
+        self.K = K
         self.n_iter = n_iter
         self.min_covar = min_covar
         self.init = init
@@ -37,22 +40,22 @@ class GMM_cy():
     def init_parameter(self, method='random'):
         if method == 'random':
             ## 乱数で初期化
-            self.weights = np.ones(self.n_mixtures, dtype=np.double) / self.n_mixtures
-            self.means = np.random.rand( self.n_mixtures, self.X.shape[1] ) * 2.0 - 1
-            self.covars = np.zeros( (self.n_mixtures, self.X.shape[1], self.X.shape[1]), dtype=np.double )
-            for k in xrange(self.n_mixtures):
+            self.weights = np.ones(self.K, dtype=np.double) / self.K
+            self.means = np.random.rand( self.K, self.X.shape[1] ) * 2.0 - 1
+            self.covars = np.zeros( (self.K, self.X.shape[1], self.X.shape[1]), dtype=np.double )
+            for k in range(self.K):
                 self.covars[k] = np.eye(self.X.shape[1])
 
         elif method == 'kmeans':
             ## k-means法で初期化
-            label,centers = kmeans_cy(self.X, n_clusters=self.n_mixtures, max_iter=100, init="pp")
+            label,centers = kmeans_cy(self.X, K=self.K, max_iter=50, n_rep=1)
 
-            self.weights = np.zeros(self.n_mixtures, dtype=np.double)
-            self.means = np.zeros( (self.n_mixtures,self.X.shape[1]) )
-            self.covars = np.zeros( (self.n_mixtures,self.X.shape[1],self.X.shape[1]), dtype=np.double )
+            self.weights = np.zeros(self.K, dtype=np.double)
+            self.means = np.zeros( (self.K,self.X.shape[1]) )
+            self.covars = np.zeros( (self.K,self.X.shape[1],self.X.shape[1]), dtype=np.double )
 
             # self.means = centers
-            # for k in xrange(self.n_mixtures):
+            # for k in xrange(self.K):
             #     Xk_idx = np.where(label == k)[0]
             #     self.weights[k] = len(Xk_idx)
             #     Xk = self.X[Xk_idx]
@@ -62,12 +65,12 @@ class GMM_cy():
             #         self.covars[k] = self.min_covar * np.eye(self.X.shape[1])
             # self.weights /= self.weights.sum()
 
-            self.weights[:] = 1.0 / self.n_mixtures
+            self.weights[:] = 1.0 / self.K
             self.means = centers
-            for k in xrange(self.n_mixtures):
+            for k in range(self.K):
                 self.covars[k] = np.cov(self.X.T) + self.min_covar * np.eye(self.X.shape[1])
             
-        self.responsibilities = np.zeros( (self.n_obs,self.n_mixtures), dtype=np.double )
+        self.responsibilities = np.zeros( (self.N,self.K), dtype=np.double )
         
     def train(self):
         """
@@ -78,13 +81,13 @@ class GMM_cy():
         self.init_parameter(method=self.init)
 
         cdef int it,n,k
-        cdef np.ndarray[double,ndim=2] gmm_log_prob = np.zeros( (self.n_obs,self.n_mixtures), dtype=np.double)
-        cdef np.ndarray[double,ndim=2] gmm_prob = np.zeros( (self.n_obs,self.n_mixtures), dtype=np.double)
-        cdef np.ndarray[double,ndim=1] Nk = np.zeros(self.n_mixtures, dtype=np.double)
-        cdef np.ndarray[double,ndim=1] cur_rz = np.zeros(self.n_obs, dtype=np.double)
+        cdef np.ndarray[double,ndim=2] gmm_log_prob = np.zeros( (self.N,self.K), dtype=np.double)
+        cdef np.ndarray[double,ndim=2] gmm_prob = np.zeros( (self.N,self.K), dtype=np.double)
+        cdef np.ndarray[double,ndim=1] Nk = np.zeros(self.K, dtype=np.double)
+        cdef np.ndarray[double,ndim=1] cur_rz = np.zeros(self.N, dtype=np.double)
         cdef np.ndarray[double,ndim=2] cov_mat_sum = np.zeros((self.X.shape[1],self.X.shape[1]), dtype=np.double)
-        cdef int n_obs = self.n_obs
-        cdef int K = self.n_mixtures
+        cdef int N = self.N
+        cdef int K = self.K
 
         # debug: sklearn版と同じ初期値を与える
         # import scipy.io
@@ -95,7 +98,7 @@ class GMM_cy():
         
         ## EM algorithm
         for it from 0 <= it < self.n_iter:
-            print 'iterates {0}'.format(it)
+            print( 'iterates {0}'.format(it) )
 
             ## e-step: update responsibility
             log_prob,self.responsibilities = self._compute_responsibility(self.X, self.means, self.covars, self.weights, self.min_covar)
@@ -147,16 +150,16 @@ class GMM_cy():
         """
         クラスタ尤度を計算する
         """
-        cdef int n_obs = X.shape[0]
+        cdef int N = X.shape[0]
         cdef int n_dim = X.shape[1]
-        cdef int n_mixtures = self.means.shape[0]
-        log_prob = np.zeros((n_obs,n_mixtures), dtype=np.double)
+        cdef int K = self.means.shape[0]
+        log_prob = np.zeros((N,K), dtype=np.double)
         cdef int k,n
         cdef double covars_det = 0.0
         cdef np.ndarray[double,ndim=2] covars_inv = np.zeros((X.shape[1],X.shape[1]), dtype=np.double)
         cdef double term1,term2,lpdf
 
-        for k from 0 <= k < n_mixtures:
+        for k from 0 <= k < K:
             try:
                 cv_chol = linalg.cholesky(self.covars[k], lower=True)
             except linalg.LinAlgError:
@@ -169,23 +172,18 @@ class GMM_cy():
         return log_prob
 
 
-    def _compute_responsibility(
-        self,
-        np.ndarray[double,ndim=2] X,
-        np.ndarray[double,ndim=2] means,
-        np.ndarray[double,ndim=3] covars,
-        np.ndarray[double,ndim=1] weights,
-        double min_covar=1e-7):
-        cdef int n_obs = X.shape[0]
+    def _compute_responsibility(self, np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] means,
+                                np.ndarray[double,ndim=3] covars, np.ndarray[double,ndim=1] weights, double min_covar=1e-7):
+        cdef int N = X.shape[0]
         cdef int n_dim = X.shape[1]
-        cdef int n_mixtures = means.shape[0]
-        log_prob = np.zeros((n_obs,n_mixtures), dtype=np.double)
+        cdef int K = means.shape[0]
+        log_prob = np.zeros((N,K), dtype=np.double)
         cdef int k,n
         cdef double covars_det = 0.0
         cdef np.ndarray[double,ndim=2] covars_inv = np.zeros((X.shape[1],X.shape[1]), dtype=np.double)
         cdef double term1,term2,lpdf
 
-        for k from 0 <= k < n_mixtures:
+        for k from 0 <= k < K:
             try:
                 cv_chol = linalg.cholesky(covars[k], lower=True)
             except linalg.LinAlgError:

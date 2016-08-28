@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import scipy as sp
-from ymh_mirlib.signal.spectral import *
+from pylufialib.signal.spectral import *
+
 
 def cyclic_tempogram(input, framesize=1024, hopsize=512, fs=44100):
     """

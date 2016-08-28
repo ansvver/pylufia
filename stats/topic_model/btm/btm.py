@@ -51,13 +51,13 @@ class BTM():
 
         self._initializeParameters()
 
-    def _initializeParameters(self):
+    def _initialize_parameters(self):
         # 文書データからbiterm生成
         all_biterms = []
         for _document in self.documents:
-            _biterms = self._genBitermsFromOneDocument(_document)
+            _biterms = self._gen_biterms_from_one_document(_document)
             all_biterms += _biterms
-        self.biterm_set = self._makeBitermSet(all_biterms)
+        self.biterm_set = self._make_biterm_set(all_biterms)
         self.B = len(self.biterm_set)
 
         # n_z,n_zw計算
@@ -71,29 +71,29 @@ class BTM():
             self.n_zw[k,wi] += count
             self.n_zw[k,wj] += count
 
-    def _genBitermsFromOneDocument(self, document):
+    def _gen_biterms_from_one_document(self, document):
         biterms = []
         exist_word_idxs = sp.where(document > 0)[0]
-        for i in xrange( len(exist_word_idxs) ):
+        for i in range( len(exist_word_idxs) ):
             wi = exist_word_idxs[i]
-            for j in xrange( i+1, len(exist_word_idxs) ):
+            for j in range( i+1, len(exist_word_idxs) ):
                 wj = exist_word_idxs[j]
                 k = sp.random.randint(0, self.n_topics)
                 _b = Biterm(wi, wj, k)
                 biterms.append(_b)
         return biterms
 
-    def _makeBitermSet(self, all_biterms):
+    def _make_biterm_set(self, all_biterms):
         biterm_set = []
         for _b in all_biterms:
-            found_idx = self._findBitermInBitermList(biterm_set, _b)
+            found_idx = self._find_biterm_in_biterm_list(biterm_set, _b)
             if found_idx is not None:
                 biterm_set[found_idx]["count"] += 1
             else:
                 biterm_set.append({"biterm":_b, "count": 1})
         return biterm_set
 
-    def _findBitermInBitermList(self, biterm_list, target_biterm):
+    def _find_biterm_in_biterm_list(self, biterm_list, target_biterm):
         found_idx = None
         for i,_b in enumerate(biterm_list):
             if _b["biterm"].wi == target_biterm.wi and _b["biterm"].wj == target_biterm.wj:
@@ -102,8 +102,8 @@ class BTM():
         return found_idx
 
     def infer(self, n_iter=100):
-        for it in xrange(n_iter):
-            print "iterates: {}".format(it)
+        for it in range(n_iter):
+            print( "iterates: {}".format(it) )
 
             # for i,_biterm in enumerate(self.biterms):
             for i,_biterm in enumerate(self.biterm_set):
@@ -115,7 +115,7 @@ class BTM():
                 self.n_zw[k,wi] -= count
                 self.n_zw[k,wj] -= count
 
-                new_biterm = self._updateBitermTopic(_biterm["biterm"])
+                new_biterm = self._update_biterm_topic(_biterm["biterm"])
                 self.biterm_set[i]["biterm"] = new_biterm
 
                 new_k = new_biterm.z
@@ -123,42 +123,42 @@ class BTM():
                 self.n_zw[new_k,wi] += count
                 self.n_zw[new_k,wj] += count
 
-            self._computeParameters()
-            self._pushValueToHistory(self.phi_history, self.phi)
-            self._pushValueToHistory(self.theta_history, self.theta)
+            self._compute_parameters()
+            self._push_value_to_history(self.phi_history, self.phi)
+            self._push_value_to_history(self.theta_history, self.theta)
 
         self.phi = sp.array(self.phi_history).mean(0)
         self.phi_history = []
         self.theta = sp.array(self.theta_history).mean(0)
         self.theta_history = []
 
-    def _updateBitermTopic(self, biterm):
+    def _update_biterm_topic(self, biterm):
         wi = biterm.wi
         wj = biterm.wj
         k = biterm.z
         p_z = (self.n_z + self.alpha) * (self.n_zw[:,wi] + self.beta) * (self.n_zw[:,wj] + self.beta) / ( (self.n_zw.sum(1) + self.n_words*self.beta)**2 )
         p_z /= p_z.sum()
-        if self._assertPz(p_z):
-            print "n_z={}".format(self.n_z)
-            print "n_zw[:,wi]={}".format(self.n_zw[:,wi])
-            print "n_zw[:,wj]={}".format(self.n_zw[:,wj])
-            print "n_zw.sum(1)={}".format(self.n_zw.sum(1))
-            print "p_z={}".format(p_z)
+        if self._assert_pz(p_z):
+            print( "n_z={}".format(self.n_z) )
+            print( "n_zw[:,wi]={}".format(self.n_zw[:,wi]) )
+            print( "n_zw[:,wj]={}".format(self.n_zw[:,wj]) )
+            print( "n_zw.sum(1)={}".format(self.n_zw.sum(1)) )
+            print( "p_z={}".format(p_z) )
         new_k = sp.random.multinomial( 1, p_z ).argmax()
         new_biterm = Biterm(wi, wj, new_k)
         return new_biterm
 
-    def _computeParameters(self):
+    def _compute_parameters(self):
         self.phi = (self.n_zw + self.beta) / (self.n_zw.sum(1)[:,sp.newaxis] + self.n_words*self.beta)
         self.theta = (self.n_z + self.alpha) / (self.B + self.n_topics*self.alpha)
 
-    def getTopicWordDist(self):
+    def get_topic_word_dist(self):
         return self.phi
 
-    def getTopicDist(self):
+    def get_topic_dist(self):
         return self.theta
 
-    def computeDocumentTopicDist(self, document):
+    def compute_document_topic_dist(self, document):
         """ compute topic distribution over one document
         @param document bag-of-words of a document
         @return topic distribution of document (theta_d)
@@ -172,8 +172,8 @@ class BTM():
 
         p(b|d) = n_d(b) / \sum n_d(b)
         """
-        doc_all_biterms = self._genBitermsFromOneDocument(document)
-        doc_biterm_set = self._makeBitermSet(doc_all_biterms)
+        doc_all_biterms = self._gen_biterms_from_one_document(document)
+        doc_biterm_set = self._make_biterm_set(doc_all_biterms)
 
         p_zd = 0.0
         if len(doc_biterm_set) > 0:
@@ -213,14 +213,14 @@ class BTM():
         self.phi = sp.load( "{}/phi.npy".format(dirname) )
         self.theta = sp.load( "{}/theta.npy".format(dirname) )
 
-    def _pushValueToHistory(self, history, val):
+    def _push_value_to_history(self, history, val):
         if len(history) < self.history_size:
             history.append(val)
         else:
             history.pop(0)
             history.append(val)
 
-    def _assertPz(self, p_z):
+    def _assert_pz(self, p_z):
         lower_judge = (p_z >= 0.0).all()
         upper_judge = (p_z <= 1.0).all()
         if lower_judge and upper_judge:

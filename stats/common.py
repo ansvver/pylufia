@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file common.py
-@brief common function for stats
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import scipy as sp
 from scipy.special import polygamma
 

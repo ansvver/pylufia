@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 
 """
-@file wavfile.py
-@brief wave file I/O functions
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+wavefile I/O functions
+====================================================================
 """
 
+# どちらかをTrueにすること
+USE_SCIPY = False
+USE_WAVIO = True
+
 import wave
-import pyaudio
 import scipy as sp
-import scipy.io.wavfile
-import struct
+if USE_SCIPY:
+    import scipy.io.wavfile
+if USE_WAVIO:
+    import wavio
 
 
 def wavread_old(fname, dtype='float'):
@@ -64,22 +66,17 @@ def wavread_old(fname, dtype='float'):
 
     return out_data, fs, bit
 
-def wavread(fname, dtype="int16"):
-    """ read waveform file
-    @param fname filename
-    @param dtype datatype of waveform ( int16(default) | int32 | float )
-    @return x[n_samples,n_channels]: waveform data
-    @return fs[float]: sampling rate
-    @return bit[int]: number of bits
-    """
-    fs,x = scipy.io.wavfile.read(fname)
-    x = x.T
-    bit = 16
-    if dtype == "int32":
-        x = x << 16
-    elif dtype == "float":
-        x = x.astype("float") / 32768.0
-
+def wavread(fname):
+    if USE_SCIPY:
+        fs,x = scipy.io.wavfile.read(fname)
+        x = x.T
+        bit = 16
+    elif USE_WAVIO:
+        w = wavio.read(fname)
+        fs = w.rate
+        bit = 8*w.sampwidth
+        x = w.data.T
+    x = x / float( 2**(bit-1) ) # -1.0 to 1.0に正規化 
     return x,fs,bit
     
 def wavread_header(fname):
@@ -152,11 +149,10 @@ def wavwrite_old(data, fs, bit, fname):
     return 0
 
 def wavwrite(data, fs, bit, fname):
-    if bit == 16:
-        outdata = (data * 2**(bit-1)).astype(sp.int16)
-    elif bit == 32:
-        outdata = (data * 2**(bit-1)).astype(sp.int32)
-    else:
-        outdata = data
-
-    scipy.io.wavfile.write(fname, fs, outdata.T)
+    if USE_SCIPY:
+        outdata = ( data * 2**(bit-1) ).astype(sp.int16)
+        scipy.io.wavfile.write(fname, fs, outdata.T)
+    elif USE_WAVIO:
+        data_wavio = data * 2**(bit-1)
+        sampwidth = bit/8
+        wavio.write(fname, data_wavio, fs, sampwidth)

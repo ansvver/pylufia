@@ -9,4 +9,4 @@
 
 """
 
-from dic_maker import *
+from .dic_maker import *

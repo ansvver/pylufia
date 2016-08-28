@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-@file beta_nmf_cy.pyx
-@brief Beta-divergence NMF (cython version)
-@author ふぇいと (@stfate)
-
-@description
-
+NMF Cython implementation
 """
 
 import cython
 import numpy as np
 cimport numpy as np
-
 
 def beta_nmf_cy(X, n_basis, b=1.0, n_iter=100, show_div=True, Winit=None):
     """
@@ -55,7 +49,7 @@ def beta_nmf_cy(X, n_basis, b=1.0, n_iter=100, show_div=True, Winit=None):
         if show_div:
             WH = np.dot(W, H)
             D = _calcBetaDivergence(WH, _X, _b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
     return W,H
     
@@ -85,7 +79,7 @@ def beta_nmf_activation_cy(X, W, b=1.0, n_iter=100, show_div=True):
         if show_div:
             WH = np.dot(W,H)
             D = _calcBetaDivergence(WH, X, b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
     return H
     
@@ -116,7 +110,7 @@ def beta_nmf_activation_other_cy(X, W, b=1.0, n_iter=100, n_basis_undesired=20, 
     cdef float phiB = _calcPhi(b)
     
     cdef int it
-    for it in xrange(n_iter):
+    for it in range(n_iter):
         WH = np.dot(W, H) + np.dot(Wu, Hu)
         H *= (np.dot( W.T, X * (WH**(b-2))) / (SPARSENESS + np.dot(W.T, WH**(b-1))))**phiB
         H /= H.max()
@@ -132,7 +126,7 @@ def beta_nmf_activation_other_cy(X, W, b=1.0, n_iter=100, n_basis_undesired=20, 
         if show_div:
             WH = np.dot(W, H) + np.dot(Wu, Hu)
             D = _calcBetaDivergence(WH, X, b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
     # return H,Wu,Hu
     return H
@@ -176,7 +170,7 @@ def beta_nmf_activation_multiclass_cy(X, Wc, b=1.0, n_iter=500, show_div=True):
         if show_div:
             WH = _computeWH(Wc, Hc)
             D = _calcBetaDivergence(WH, _X, _b)
-            print 'Beta-divergence: {0}'.format(D)
+            print( 'Beta-divergence: {0}'.format(D) )
         
     return Hc
 

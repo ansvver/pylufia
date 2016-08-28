@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file similarity_matrix.py
-@brief similarity matrix extractor
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Structural feature extractors
+====================================================================
 """
 
 import scipy as sp
@@ -31,9 +28,9 @@ def similarity_matrix(X, Y, metric='euclid'):
     else:
         dist_func = cos_dist
     
-    for i in xrange(n_X):
+    for i in range(n_X):
         cur_X = X[i]
-        for j in xrange(i, n_Y): # 対称性を利用して計算量削減
+        for j in range(i, n_Y): # 対称性を利用して計算量削減
             SM[i, j] = dist_func(cur_X, Y[j])
     
     # 対称位置の値を一気に代入(二重加算される対角成分の値は1/2する)
@@ -90,7 +87,7 @@ def similarity_matrix_scipy(X, Y, dist_func):
     """
     return sp.spatial.distance.cdist(X, Y, dist_func)
     
-def add_axis_to_similarity_matrix2d(feature, X, Y, SM, metric='cos'):
+def addAxisToSimilarityMatrix2d(feature, X, Y, SM, metric='cos'):
     """
     既にあるSimilarity Matrixに対し，一つ特徴量を追加したSimilarity Matrixを作る
     """
@@ -110,11 +107,11 @@ def add_axis_to_similarity_matrix2d(feature, X, Y, SM, metric='cos'):
         dist_func = cos_dist_2d
         
     SM2[:n_obsX,:n_obsY] = SM
-    for i in xrange(n_obsY):
+    for i in range(n_obsY):
         SM2[-1,i] = dist_func(feature, Y[i])
         # SM2[-1,i] = rhythmDist_euclid(feature, Y[i])
     SM2[-1,-1] = 0.0
-    for j in xrange(n_obsX):
+    for j in range(n_obsX):
         SM2[j,-1] = rhythmDist_cos(feature, X[j])
         # SM2[j,-1] = rhythmDist_euclid(feature, X[j])
         

@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-@file signal_generator.py
-@brief signal generator
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Signal generator
+====================================================================
 """
 
-def gen_white_noise(mean, var, length):
+def genWhiteNoise(mean, var, length):
     if (method == 'uni'): # uniform noise
         noise = []
         for i in range(length):

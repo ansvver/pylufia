@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-@file player.py
-@brief audio playback functions
-@author ふぇいと (@stfate)
-
-@description
-
+====================================================================
+Audio playback
+====================================================================
 """
 
 import pyaudio
 import wave
 
 
-def play_snd(fname):
+def playsnd(fname):
     """
     Play wave sound
     

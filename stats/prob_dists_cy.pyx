@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-@file prob_dists_cy.pyx
-@brief classes for computing probabilistic distributions (cython version)
-@author ふぇいと (@stfate)
+prob_dists_cy.pyx
 
-@description
-確率分布これくしょん
+確率分布を計算する関数群(Cython実装)
 """
 
 cimport cython
@@ -16,7 +13,6 @@ import scipy.misc
 import scipy.special
 from common import digamma
 import scipy.linalg as linalg
-
 
 class Bern_cy():
     """

@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-@file cqt.pyx
-@brief CQT(Constant-Q Transform) implementation (cython version)
-@author ふぇいと (@stfate)
-
-@description
-
-"""
-
 import cython
 import numpy as np
 cimport numpy as np
@@ -16,10 +7,9 @@ import scipy as sp
 import time
 
 from fft import *
-from pylufia.signal import *
 
 
-cdef make_cqt_kernels_cy(int framesize, float fs, int n_cq, int n_per_semitone, float fmin, int n_wavs=30):
+cdef make_cqt_kernels(int framesize, float fs, int n_cq, int n_per_semitone, float fmin, int n_wavs=30):
     """
     CQTのカーネル関数作成
     """
@@ -58,7 +48,7 @@ def cqt_cy(x, framesize=8192, hopsize=1024, fs=44100, window='hann', n_cq=88, n_
     cdef np.ndarray[double, ndim=1] freqs = np.zeros(n_cq, dtype=np.double)
     cdef int k
     
-    kernels,freqs = make_cqt_kernels_cy(framesize, fs, n_cq, n_per_semitone, fmin)
+    kernels,freqs = make_cqt_kernels(framesize, fs, n_cq, n_per_semitone, fmin)
     kernels_f = kernels.astype(float)
     
     X,F,T = stft(x_zpad, framesize, hopsize, fs, window)
@@ -83,7 +73,7 @@ def cqt_cy(x, framesize=8192, hopsize=1024, fs=44100, window='hann', n_cq=88, n_
     
     return CQ, freqs, T
 
-def make_oct_cqt_kernels_cy(fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thresh=0.0005, window='blackmanharris', perf_rast=False):
+def make_oct_cqt_kernel_cy(fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thresh=0.0005, window='blackmanharris', perf_rast=False):
     """
     CQTのKernel設計(Klapuri CQT用)
     """
@@ -125,7 +115,7 @@ def make_oct_cqt_kernels_cy(fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thres
     cdef int atom_ind = 0
     cdef int idx = 0
     cdef int k,i
-    for k in xrange(n_bins):
+    for k in range(n_bins):
         Nk = int(round( Q * fs / float(fmin*2**(k/float(n_bins))) )) # N[k] = (fs/fk)*Q. Rounding will be omitted in future versions
         
         win_func = np.sqrt(sp.signal.get_window(window, Nk))
@@ -192,7 +182,7 @@ def cqt_oct_cy(x, fmin, fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thresh=0.
     B,A = sp.signal.butter(LPorder, cutoff, 'low') # design f_nyquist/2-lowpass filter
 
     # design kernel for one octave 
-    cqt_kernel,params = make_oct_cqt_kernels_cy(fmax, n_bins, fs, q=q, atom_hop_factor=atom_hop_factor, thresh=thresh, window=window)
+    cqt_kernel,params = make_oct_cqt_kernel_cy(fmax, n_bins, fs, q=q, atom_hop_factor=atom_hop_factor, thresh=thresh, window=window)
 
     # calculate CQT
     listCQ = []
@@ -207,7 +197,7 @@ def cqt_oct_cy(x, fmin, fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thresh=0.
     time_make_frame = 0.0
     time_fft = 0.0
     time_dot = 0.0
-    for i in xrange(n_octaves):
+    for i in range(n_octaves):
         t1 = time.clock()
         framed = make_framed_data(x_zp, params['fftsize'], params['hopsize'], 'boxcar')
         t2 = time.clock()
@@ -229,9 +219,9 @@ def cqt_oct_cy(x, fmin, fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thresh=0.
             x_zp = sp.signal.filtfilt(B, A, x_zp) # anti aliasing filter
             x_zp = x_zp[0::2] # drop samplerate by 2
 
-    print time_make_frame
-    print time_fft
-    print time_dot
+    print(time_make_frame)
+    print(time_fft)
+    print(time_dot)
 
     # map to sparse matrix representation
     arrayCQ = _list2ndarray(listCQ, n_octaves, n_bins, params['firstcenter'], params['atom_hop'], params['winlen'])
@@ -260,7 +250,7 @@ def cqt_oct_cy(x, fmin, fmax, n_bins, fs, q=1.0, atom_hop_factor=0.25, thresh=0.
 def interpolate_cqt(CQ, n_octaves, n_bins):
     intCQ = sp.zeros( CQ.shape )
     
-    for k in xrange(CQ.shape[0]):
+    for k in range(CQ.shape[0]):
         oct = int(n_octaves-sp.floor((k+1-0.1)/float(n_bins)))
         step_vec = sp.arange(0,CQ.shape[1],2**(oct-1))
         Xbin = CQ[k,step_vec]
@@ -280,7 +270,7 @@ def icqt_oct(arrayCQ, cqt_kernel, params):
     
     K_inv = cqt_kernel
     y = []
-    for i in xrange(n_octaves-1,-1,-1):
+    for i in range(n_octaves-1,-1,-1):
         CQ_oct = listCQ[i]
         
         Y = sp.dot(K_inv, CQ_oct)
@@ -293,7 +283,7 @@ def icqt_oct(arrayCQ, cqt_kernel, params):
         
         if sig_len >= len(y):
             y = sp.r_[y, sp.zeros(sig_len-len(y))]
-        for n in xrange(n_blocks-1):
+        for n in range(n_blocks-1):
             y[n*hopsize:n*hopsize+fftsize] = y_oct[:,n] + y[n*hopsize:n*hopsize+fftsize] #overlap-add
             
         # upsample & filtering
@@ -342,12 +332,12 @@ cdef _list2ndarray(listCQ, int n_octaves, int n_bins, float firstcenter, float a
     cdef np.ndarray[complex,ndim=2] CQ = np.zeros((n_bins*n_octaves,listCQ[0].shape[1]*n_atoms-drop), dtype=complex)
 
     cdef int i,u
-    for i in xrange(n_octaves):
+    for i in range(n_octaves):
         drop = empty_hops*2**(n_octaves-i-1)-empty_hops
         X = listCQ[i]
         if n_atoms > 1: # more than one atom per bin --> reshape
             Xoct = np.zeros( (n_bins,n_atoms*X.shape[1]-drop), dtype=complex )
-            for u in xrange(n_bins):
+            for u in range(n_bins):
                 # reshape to continous windows for each bin (for the case of several wins per frame)
                 octX_bin = X[u*n_atoms:(u+1)*n_atoms,:]
                 Xcont = np.reshape(octX_bin,octX_bin.shape[0]*octX_bin.shape[1], order='F')
@@ -373,7 +363,7 @@ cdef _ndarray2list(np.ndarray[complex,ndim=2] arrayCQ, int n_bins, int n_octaves
 
     cdef int i,u
     cdef float dropped = 0.0
-    for i in xrange(n_octaves):
+    for i in range(n_octaves):
         dropped = empty_hops*2**(n_octaves-i-1)-empty_hops
         X = arrayCQ[n_bins*n_octaves-(i+1)*n_bins:n_bins*n_octaves-i*n_bins,::2**i]
         
