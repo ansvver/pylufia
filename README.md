@@ -1,4 +1,4 @@
-pylufia: python Language & mUsic Feature Integrated Analyzer
+pylufia: python language & music feature extraction & statistical model analysis library
 ============================================================
 
 # hoge
