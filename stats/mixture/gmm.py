@@ -19,6 +19,7 @@ from pylufia.stats.cluster import *
 
 import scipy.linalg as linalg
 
+
 class GMM():
     """ GMM implementation """
     def __init__(self, X, K=50, n_iter=100):

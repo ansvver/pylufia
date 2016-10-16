@@ -24,18 +24,18 @@ class CGSLDA():
         n_dk: 文書dにトピックkに属する単語が出てきた回数
         n_d: 文書dの単語総数
     """
-    def __init__(self, documents, n_topics=10, alpha=0.5, beta=0.5):
-        self.documents = documents
+    def __init__(self, n_topics=10, alpha=0.5, beta=0.5):
         self.n_topics = n_topics
-        self.n_docs,self.n_words = documents.shape
         self.alpha = alpha
         self.beta = beta
+        self.history_size = 200
+        self.W = 0
 
+    def _alloc_arrays(self):
         self.phi = sp.zeros( (self.n_topics,self.n_words), dtype=sp.double )
         self.phi_history = []
         self.theta = sp.zeros( (self.n_docs,self.n_topics), dtype=sp.double )
         self.theta_history = []
-        self.history_size = 200
         self.topics = sp.zeros( (self.n_docs,self.n_words), dtype=sp.int32 )
         # self.topics = sp_sparse.lil_matrix( (self.n_docs,self.n_words), dtype=sp.int32 )
         self.n_kw = sp.zeros( (self.n_topics,self.n_words), dtype=sp.int32 )
@@ -46,11 +46,8 @@ class CGSLDA():
         # self.n_dk = sp_sparse.lil_matrix( (self.n_docs,self.n_topics), dtype=sp.int32 )
         self.n_d = sp.zeros(self.n_docs, dtype=sp.int32)
         # self.n_d = sp_sparse.lil_matrix(self.n_docs, dtype=sp.int32)
-        self.W = 0
 
     def _initialize_parameters(self):
-        self.W = 0
-
         for d in range(self.n_docs):
             self.topics[d,:] = sp.random.randint(0, self.n_topics, self.n_words)
             exist_words_idx = sp.where(self.documents[d] > 0)[0]
@@ -65,7 +62,10 @@ class CGSLDA():
         # self.W = len( sp.where(self.documents.sum(0) > 0)[0] )
         self.W = self.n_words
 
-    def infer(self, n_iter=100):
+    def infer(self, documents, n_iter=100):
+        self.documents = documents
+        self.n_docs,self.n_words = self.documents.shape
+        self._alloc_arrays()
         self._initialize_parameters()
 
         P_arr = sp.zeros(n_iter)
@@ -236,17 +236,19 @@ class CGSLDA():
         sp.save("{}/phi.npy".format(dirname), self.phi)
         sp.save("{}/theta.npy".format(dirname), self.theta)
 
-    def load(self, dirname):
+    @classmethod
+    def load(cls, dirname):
         import json
+        model = cls()
         params = json.load( open( "{}/params.json".format(dirname) ) )
-        self.alpha = params["alpha"]
-        self.beta = params["beta"]
-        self.n_topics = params["n_topics"]
-        self.n_docs = params["n_docs"]
-        self.n_words = params["n_words"]
-        self.phi = sp.load( "{}/phi.npy".format(dirname) )
-        self.theta = sp.load( "{}/theta.npy".format(dirname) )
-
+        model.alpha = params["alpha"]
+        model.beta = params["beta"]
+        model.n_topics = params["n_topics"]
+        model.n_docs = params["n_docs"]
+        model.n_words = params["n_words"]
+        model.phi = sp.load( "{}/phi.npy".format(dirname) )
+        model.theta = sp.load( "{}/theta.npy".format(dirname) )
+        return model
 
     def _push_value_to_history(self, history, val):
         if len(history) < self.history_size:

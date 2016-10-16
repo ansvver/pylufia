@@ -13,6 +13,5 @@
 #
 #-------------------------------------------------------------------------------
 
-from .aulos_timbre import *
 from .bark import *
 from .mfcc import *

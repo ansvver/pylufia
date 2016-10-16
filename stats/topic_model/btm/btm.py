@@ -32,24 +32,31 @@ class BTM():
     @class BTM
     @brief a class of Biterm Topic Model implemantation
     """
-    def __init__(self, documents, n_topics=100, alpha=1.0, beta=1.0):
-        self.documents = documents
+    def __init__(self, n_topics=100, alpha=1.0, beta=1.0):
+        # self.documents = documents
         # self.all_biterms = []
-        self.biterm_set = []
-        self.B = 0
         self.n_topics = n_topics
-        self.n_docs,self.n_words = self.documents.shape
         self.alpha = alpha
         self.beta = beta
+        self.biterm_set = []
+        self.B = 0
+        self.history_size = 200
+
+        self.n_docs,self.n_words = self.documents.shape
         self.phi = sp.zeros( (self.n_topics,self.n_words), dtype=sp.double )
         self.phi_history = []
         self.theta = sp.zeros(self.n_topics, dtype=sp.double)
         self.theta_history = []
-        self.history_size = 200
         self.n_z = sp.zeros(self.n_topics, dtype=sp.int32)
         self.n_zw = sp.zeros( (self.n_topics,self.n_words), dtype=sp.int32 )
 
-        self._initializeParameters()
+    def _alloc_arrays(self):
+        self.phi = sp.zeros( (self.n_topics,self.n_words), dtype=sp.double )
+        self.phi_history = []
+        self.theta = sp.zeros(self.n_topics, dtype=sp.double)
+        self.theta_history = []
+        self.n_z = sp.zeros(self.n_topics, dtype=sp.int32)
+        self.n_zw = sp.zeros( (self.n_topics,self.n_words), dtype=sp.int32 )
 
     def _initialize_parameters(self):
         # 文書データからbiterm生成
@@ -101,7 +108,12 @@ class BTM():
                 break
         return found_idx
 
-    def infer(self, n_iter=100):
+    def infer(self, documents, n_iter=100):
+        self.documents = documents
+        self.n_docs,self.n_words = self.documents.shape
+        self._alloc_arrays()
+        self._initialize_parameters()
+
         for it in range(n_iter):
             print( "iterates: {}".format(it) )
 
@@ -201,17 +213,20 @@ class BTM():
         sp.save("{}/phi.npy".format(dirname), self.phi)
         sp.save("{}/theta.npy".format(dirname), self.theta)
 
-    def load(self, dirname):
+    @classmethod
+    def load(cls, dirname):
         import json
+        model = cls()
         params = json.load( open( "{}/params.json".format(dirname) ) )
-        self.alpha = params["alpha"]
-        self.beta = params["beta"]
-        self.n_topics = params["n_topics"]
-        self.n_docs = params["n_docs"]
-        self.n_words = params["n_words"]
-        self.B = params["B"]
-        self.phi = sp.load( "{}/phi.npy".format(dirname) )
-        self.theta = sp.load( "{}/theta.npy".format(dirname) )
+        model.alpha = params["alpha"]
+        model.beta = params["beta"]
+        model.n_topics = params["n_topics"]
+        model.n_docs = params["n_docs"]
+        model.n_words = params["n_words"]
+        model.B = params["B"]
+        model.phi = sp.load( "{}/phi.npy".format(dirname) )
+        model.theta = sp.load( "{}/theta.npy".format(dirname) )
+        return model
 
     def _push_value_to_history(self, history, val):
         if len(history) < self.history_size:

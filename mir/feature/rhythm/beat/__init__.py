@@ -13,11 +13,10 @@
 #
 #-------------------------------------------------------------------------------
 
-from .aulos_rhythm import *
 from .beat_histogram import *
 from .beat_spectrum import *
 # import pyximport
-import os
+# import os
 # import numpy
 # # mingw_setup_args={'options': {'build_ext': {'compiler': 'mingw32'}}}
 # # pyximport.install(setup_args=mingw_setup_args)
