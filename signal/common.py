@@ -26,7 +26,7 @@ def autocorr(input, n_lag):
     """
     R = sp.zeros(n_lag)
 
-    for lag in xrange(n_lag):
+    for lag in range(n_lag):
         R[lag] = sum(input[lag:len(input)] * input[0:len(input)-lag])
 
     return R
@@ -49,7 +49,7 @@ def crosscorr(input0, input1, n_lag):
     """
     R = sp.zeros(n_lag)
 
-    for lag in xrange(n_lag):
+    for lag in range(n_lag):
         R[lag] = sum(input0[lag:len(input0)] * input1[0:len(input1)-lag])
 
     return R

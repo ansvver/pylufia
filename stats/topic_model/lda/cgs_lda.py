@@ -232,7 +232,7 @@ class CGSLDA():
     def save(self, dirname):
         import json
         params = {"alpha": self.alpha, "beta": self.beta, "n_topics": self.n_topics, "n_docs": self.n_docs, "n_words": self.n_words}
-        json.dump(params, open( "{}/params.json".format(dirname), "wb" ) )
+        json.dump(params, open( "{}/params.json".format(dirname), "w" ) )
         sp.save("{}/phi.npy".format(dirname), self.phi)
         sp.save("{}/theta.npy".format(dirname), self.theta)
 
