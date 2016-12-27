@@ -58,7 +58,7 @@ class CGSLDA():
                 self.n_d[d] += self.documents[d,w]
                 self.n_kw[k,w] += self.documents[d,w]
                 self.n_k[k] += self.documents[d,w]
-        
+
         # self.W = len( sp.where(self.documents.sum(0) > 0)[0] )
         self.W = self.n_words
 
@@ -75,7 +75,7 @@ class CGSLDA():
 
             P = self.perplexity(self.documents)
             P_arr[it] = P
-            print( 'iterates: {} perplexity={}'.format(it,P) )
+            print( "iterates: {} perplexity={}".format(it,P) )
 
         self.theta = sp.array(self.theta_history).mean(0)
         self.phi = sp.array(self.phi_history).mean(0)
@@ -147,7 +147,7 @@ class CGSLDA():
         exist_words_idx = sp.where(document > 0)[0]
         n_words_cur = len(exist_words_idx)
         for w in exist_words_idx:
-        # for w in xrange(self.n_words):
+        # for w in range(self.n_words):
             dw = document[w]
             k = topics[w]
             n_dk_new[k] += dw
@@ -157,7 +157,7 @@ class CGSLDA():
 
         for it in range(n_iter):
             for w in exist_words_idx:
-            # for w in xrange(self.n_words):
+            # for w in range(self.n_words):
                 k = topics[w]
                 dw = document[w]
                 # w番目の単語t(トピックk)についてカウンタを減算
@@ -197,7 +197,7 @@ class CGSLDA():
 
     def get_document_topic_dist(self, d):
         return self.theta[d]
-    
+
     def perplexity(self, documents):
         perplexity = 0.0
         n_docs = documents.shape[0]
@@ -216,8 +216,8 @@ class CGSLDA():
 
     def perplexity_for_new_document(self, document, theta, phi):
         perplexity = 0.0
-        N = document.sum()
 
+        N = document.sum()
         words_exist_idx = sp.where(document > 0)[0]
         for w in words_exist_idx:
             theta_phi_sum = 0.0

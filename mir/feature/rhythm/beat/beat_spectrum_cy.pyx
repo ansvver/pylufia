@@ -5,13 +5,13 @@ import numpy as np
 cimport numpy as np
 from scipy import interpolate
 
-from ymh_mir.signal.spectral import *
-from ymh_mir.mir.feature.structure import *
-from ymh_mir.mir.feature.spectral import *
-from ymh_mir.mir.feature.common import *
-import ymh_mir.signal.filter.iir as iir
-import ymh_mir.signal as signal
-import ymh_mir.signal.segment as segment
+from pylufia.signal.spectral import *
+from pylufia.mir.feature.structure import *
+from pylufia.mir.feature.spectral import *
+from pylufia.mir.feature.common import *
+import pylufia.signal.filter.iir as iir
+import pylufia.signal as signal
+import pylufia.signal.segment as segment
 
 import itertools
 import time

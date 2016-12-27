@@ -3,7 +3,7 @@
 """
 @package btm.py
 @brief an implementation of BTM(Biterm Topic Model)
-@author Dan SASAI (YCJ,RDD)
+@author ふぇいと (@stfate)
 
 @description
 X. Yang "A Biterm Topic Model for Short Texts" (WWW2013)を実装．

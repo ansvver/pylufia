@@ -9,7 +9,6 @@
 import scipy as sp
 import gensim.models.word2vec as word2vec
 from six import string_types
-from copy import deepcopy
 
 
 class Word2Vec(word2vec.Word2Vec):
@@ -29,7 +28,7 @@ class Word2Vec(word2vec.Word2Vec):
         compute log-likelihood of each sentences
 
         hierarchical softmaxが有効な場合(hs=1 and negative=0)はgensimの実装をそのまま用いる．
-        そうでない場合(つまりnegative samplingによる学習をする場合)はgensimに実装がないので
+        そうでない場合(つまりnegative samplingによる学習を行う場合)はgensimに実装がないので
         対数尤度の計算を自前で行う．
         """
         if self.hs == 1 and self.negative == 0:

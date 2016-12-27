@@ -87,7 +87,7 @@ def similarity_matrix_scipy(X, Y, dist_func):
     """
     return sp.spatial.distance.cdist(X, Y, dist_func)
     
-def addAxisToSimilarityMatrix2d(feature, X, Y, SM, metric='cos'):
+def add_axis_to_similarity_matrix_2d(feature, X, Y, SM, metric='cos'):
     """
     既にあるSimilarity Matrixに対し，一つ特徴量を追加したSimilarity Matrixを作る
     """

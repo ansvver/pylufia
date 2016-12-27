@@ -7,7 +7,7 @@ import glob
 import shutil
 
 
-def main():
+if __name__ == "__main__":
     root_dir = os.getcwd()
 
     for root,dirs,files in os.walk(root_dir):
@@ -31,7 +31,3 @@ def main():
 
                 if os.path.exists(lib_root):
                     shutil.rmtree(lib_root)
-
-
-if __name__ == '__main__':
-    main()
