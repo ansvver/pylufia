@@ -58,12 +58,13 @@ class CGSLDA():
                 self.n_d[d] += self.documents[d,w]
                 self.n_kw[k,w] += self.documents[d,w]
                 self.n_k[k] += self.documents[d,w]
-
+        
         # self.W = len( sp.where(self.documents.sum(0) > 0)[0] )
         self.W = self.n_words
 
-    def infer(self, documents, n_iter=100):
+    def infer(self, documents, labels=None, n_iter=100):
         self.documents = documents
+        self.labels = labels
         self.n_docs,self.n_words = self.documents.shape
         self._alloc_arrays()
         self._initialize_parameters()
@@ -75,7 +76,7 @@ class CGSLDA():
 
             P = self.perplexity(self.documents)
             P_arr[it] = P
-            print( "iterates: {} perplexity={}".format(it,P) )
+            print( 'iterates: {} perplexity={}'.format(it,P) )
 
         self.theta = sp.array(self.theta_history).mean(0)
         self.phi = sp.array(self.phi_history).mean(0)
@@ -147,7 +148,7 @@ class CGSLDA():
         exist_words_idx = sp.where(document > 0)[0]
         n_words_cur = len(exist_words_idx)
         for w in exist_words_idx:
-        # for w in range(self.n_words):
+        # for w in xrange(self.n_words):
             dw = document[w]
             k = topics[w]
             n_dk_new[k] += dw
@@ -157,7 +158,7 @@ class CGSLDA():
 
         for it in range(n_iter):
             for w in exist_words_idx:
-            # for w in range(self.n_words):
+            # for w in xrange(self.n_words):
                 k = topics[w]
                 dw = document[w]
                 # w番目の単語t(トピックk)についてカウンタを減算
@@ -198,6 +199,12 @@ class CGSLDA():
     def get_document_topic_dist(self, d):
         return self.theta[d]
 
+    def get_documents(self):
+        return self.documents
+
+    def get_labels(self):
+        return self.labels
+    
     def perplexity(self, documents):
         perplexity = 0.0
         n_docs = documents.shape[0]
@@ -216,8 +223,8 @@ class CGSLDA():
 
     def perplexity_for_new_document(self, document, theta, phi):
         perplexity = 0.0
-
         N = document.sum()
+
         words_exist_idx = sp.where(document > 0)[0]
         for w in words_exist_idx:
             theta_phi_sum = 0.0
@@ -233,8 +240,15 @@ class CGSLDA():
         import json
         params = {"alpha": self.alpha, "beta": self.beta, "n_topics": self.n_topics, "n_docs": self.n_docs, "n_words": self.n_words}
         json.dump(params, open( "{}/params.json".format(dirname), "w" ) )
+        sp.save("{}/documents.npy".format(dirname), self.documents)
+        sp.save("{}/labels.npy".format(dirname), self.labels)
         sp.save("{}/phi.npy".format(dirname), self.phi)
         sp.save("{}/theta.npy".format(dirname), self.theta)
+        sp.save("{}/topics.npy".format(dirname), self.topics)
+        sp.save("{}/n_kw.npy".format(dirname), self.n_kw)
+        sp.save("{}/n_k.npy".format(dirname), self.n_k)
+        sp.save("{}/n_dk.npy".format(dirname), self.n_dk)
+        sp.save("{}/n_d.npy".format(dirname), self.n_d)
 
     @classmethod
     def load(cls, dirname):
@@ -246,8 +260,15 @@ class CGSLDA():
         model.n_topics = params["n_topics"]
         model.n_docs = params["n_docs"]
         model.n_words = params["n_words"]
+        model.documents = sp.load( "{}/documents.npy".format(dirname) )
+        model.labels = sp.load( "{}/labels.npy".format(dirname) )
         model.phi = sp.load( "{}/phi.npy".format(dirname) )
         model.theta = sp.load( "{}/theta.npy".format(dirname) )
+        model.topics = sp.load( "{}/topics.npy".format(dirname) )
+        model.n_kw = sp.load( "{}/n_kw.npy".format(dirname) )
+        model.n_k = sp.load( "{}/n_k.npy".format(dirname) )
+        model.n_dk = sp.load( "{}/n_dk.npy".format(dirname) )
+        model.n_d = sp.load( "{}/n_d.npy".format(dirname) )
         return model
 
     def _push_value_to_history(self, history, val):

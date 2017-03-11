@@ -20,7 +20,7 @@ def make_word_dic(filelist, part="all"):
     word_dic = {}
     id = 0
     for fn in filelist:
-        print(fn)
+        # print(fn)
         input_txt = textio.loadtxt(fn)
         keywords,parts = feature.extract_keywords(input_txt, part)
 

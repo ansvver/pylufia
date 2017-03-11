@@ -123,7 +123,7 @@ def nmf_is(X, n_basis, n_iter):
     pISD = 1e100
     for it in range(n_iter):
         idWH = 1.0/sp.dot(W,H)
-        print it
+        print(it)
         isd = X*idWH
         isd = (isd - sp.log(isd)-1).sum()
         

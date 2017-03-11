@@ -3,7 +3,7 @@
 """
 @package stft.py
 @brief
-@author ふぇいと(@stfate)
+@author Dan SASAI (YCJ,RDD)
 """
 
 import scipy as sp
@@ -62,36 +62,23 @@ from .fft import *
 
 #     return X, freqs, times
 
-def stft(x, framesize=512, hopsize=256, fs=44100, window="hann", mode="psd"):
+def stft(x, framesize=512, hopsize=256, fs=44100, window="hann", mode="magnitude"):
     """
-    Compute spectrogram
-    
-    Parameters:
-      x: ndarray
-        input signal
-      framesize: int
-        framesize of STFT
-      hopsize: int
-        hopsize: of STFT
-      window: string
-        type of window function
-      fs: int
-        samplingrate
-      mode: string
-        kind of spectrogram to compute
-    
-    Returns:
-      X: ndarray
-        result of STFT
-      freqs: ndarray
-        frequency map to fft index
-      times: ndarray
-        time map to frame index
+    @param x[ndarray] input audio signal
+    @param framesize[int] frame size of STFT
+    @param hopsize[int] hop size of STFT
+    @param window[str] type of window function
+    @param fs[int] sampling rate
+    @param mode[str] kind of spectrogram to compute ("psd"|"complex"|"magnitude"|"angle"|"phase")
+    @return
+        X[ndarray] STFT spectrogram
+        freqs[ndarray] frequency map to fft index
+        times[ndarray] time map to frame index
     """
-    freqs,times,X = spsig.spectrogram(x, fs=fs, nperseg=framesize, noverlap=hopsize, window=window, mode=mode)
+    freqs,times,X = spsig.spectrogram(x, fs=fs, nperseg=framesize, noverlap=framesize-hopsize, window=window, mode=mode)
     return X, freqs, times
 
-def stft_amp(x, framesize=512, hopsize=256, fs=44100, window='hann'):
+def stft_amp(x, framesize=512, hopsize=256, fs=44100, window="hann"):
     n_frames = int( sp.ceil( (len(x) - framesize) / float(hopsize) ) ) + 1
     n_freqs = sp.ceil( (framesize + 1) / 2.0)
     times = sp.arange(0, len(x), hopsize)
@@ -118,7 +105,7 @@ def stft_amp(x, framesize=512, hopsize=256, fs=44100, window='hann'):
 
     return X, freqs, times
     
-def istft(X, framesize=512, hopsize=256, window='hann'):
+def istft(X, framesize=512, hopsize=256, window="hann"):
     """
     逆短時間フーリエ変換
     """

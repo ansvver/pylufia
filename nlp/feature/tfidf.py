@@ -26,12 +26,18 @@ def compute_idf(documents):
         we assums feature dimensions as counts of each vocabularies
     @return idf of each words [n_dims]
     """
-    D = documents.shape[0]
-    idf = sp.log( D / documents.sum(0).astype("float") )
+    n_docs = documents.shape[0]
+    n_words = documents.shape[1]
+    n_docs_with_w = sp.zeros(n_words)
+    for w in range(n_words):
+        _count = len( sp.where( documents[:,w] > 0 )[0] )
+        n_docs_with_w[w] = _count
+
+    idf = sp.log2( n_docs / n_docs_with_w )
     return idf
 
 def compute_tfidf(documents):
-    """ compute TFIDF
+    """ compute TF-IDF
     @param documents bag-of-words features of documents [n_docs,n_dims]
     @return tdidf of 
     """

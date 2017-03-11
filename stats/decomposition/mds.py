@@ -11,18 +11,13 @@ import scipy.linalg as linalg
 
 
 def mds(SM):
-    """
-    MDS (Multi Dimensional Scaling)
-    
-    Parameters:
-      SM: ndarray
-        Input similarity matrix
-    
-    Returns:
-      V1: ndarray
-        Dimension 1 of MDS
-      V2: ndarray
-        Dimension 2 of MDS
+    """ MDS (Multi Dimensional Scaling)
+    @param SM Input similarity matrix
+    @return 
+        V1: ndarray
+            Dimension 1 of MDS
+        V2: ndarray
+            Dimension 2 of MDS
     """
     N = SM.shape[0]
     

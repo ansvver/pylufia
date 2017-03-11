@@ -250,8 +250,8 @@ class HTRNMF():
             self.taug[g] = self.alphag / self.cg + (self.Eh[g,:,:,sp.newaxis] * Ew[g,:,sp.newaxis,:] * self.Et[g,:,sp.newaxis,sp.newaxis]).sum()
         self.Eg = Gamma_cy(self.rhog, self.taug).expectation()
 
-        print 'Eg:'
-        print self.Eg
+        print('Eg:')
+        print(self.Eg)
 
     def _updateG_brute(self):
         self.rhog[:] = self.alphag
@@ -275,8 +275,8 @@ class HTRNMF():
 
         self.Eg = Gamma_cy(self.rhog, self.taug).expectation()
 
-        print 'Eg:'
-        print self.Eg
+        print('Eg:')
+        print(self.Eg)
 
     def _compute_expectations(self):
         self.Ew = Gamma_cy(self.rhow, self.tauw).expectation()

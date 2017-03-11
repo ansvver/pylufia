@@ -1,41 +1,28 @@
 # -*- coding: utf-8 -*-
 
 import scipy as sp
+import scipy.signal as sp_sig
 from scipy.fftpack.realtransforms import dct
-import pylufia.signal.spectral as sigspe
-import pylufia.mir.feature as feature
+import ymh_mir.signal.spectral as sigspe
+import ymh_mir.mir.feature as feature
 
 
-def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
+def _make_mel_filterbank(n_mel_bands, fs, framesize, min_freq, max_freq):
+    """ Calculate mel-filterbank
+    @param n_mel_bands number of mel bands
+    @param fs sampling rate
+    @param framesize frame size
+    @param min_freq minimum frequency of mel filterbank
+    @param max_freq maximum frequency of mel filterbank
+    @return (filterbank, center frequencies)
     """
-    Calculate mel-filterbank
     
-    Parameters:
-      freq_max: int
-        max frequency
-        周波数軸上のindex:framesize-1での周波数値がこの値になるようにすること
-      framesize: int
-        frame size
-      nChannels: int
-        number of channels of mel-filterbank
-    
-    Returns:
-      filterBank: ndarray
-        mel-filterbank
-      f_centers: ndarray
-        center frequencies of mel-filterbank
-    """
-    # freq_max = fs / 2 # ナイキスト周波数
-    mel_max = _hz2mel(freq_max) # ナイキスト周波数 (mel-scale)
+    min_mel = _hz2mel(min_freq)
+    max_mel = _hz2mel(max_freq)
     n_freqs = int(framesize / 2) + 1 # 周波数インデックスの最大数
-    n_bins = int(n_freqs * freq_max*2 / float(fs))
-    # reso_freq = freq_max*2 / float(framesize) # 周波数解像度
-    reso_freq = freq_max / float(n_bins) # 周波数解像度
-    reso_mel = mel_max / (n_ceps + 1) # 周波数解像度(mel)
-    mel_centers = sp.arange(0, n_ceps+2) * reso_mel # 中心周波数(mel)
+    reso_mel = (max_mel - min_mel) / (n_mel_bands + 1) # 周波数解像度(mel)
+    mel_centers = min_mel + sp.arange(0, n_mel_bands+2) * reso_mel # 中心周波数(mel)
     fc = _mel2hz(mel_centers) # 中心周波数(Hz)
-    # fc = sp.array([100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1149, 1320,
-                # 1516, 1741, 2000, 2297, 2639, 3031, 3482, 4000, 4595, 5278, 6063, 6964])
     f_lowers = fc[:-2]
     f_centers = fc[1:-1]
     f_uppers = fc[2:]
@@ -47,8 +34,8 @@ def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
     fidx_lowers = ( f_lowers / float(fs/2) * n_freqs ).astype('int')
     fidx_uppers =  ( f_uppers / float(fs/2) * n_freqs ).astype('int')
 
-    filterbank = sp.zeros( (n_ceps, n_freqs) )
-    for n in range(n_ceps):
+    filterbank = sp.zeros( (n_mel_bands, n_freqs) )
+    for n in range(n_mel_bands):
         inc = 1.0 / (fidx_centers[n] - fidx_lowers[n])
         idxs = sp.arange(fidx_lowers[n], fidx_centers[n])
         filterbank[n, fidx_lowers[n]:fidx_centers[n]] = (idxs - fidx_lowers[n]) * inc
@@ -58,55 +45,43 @@ def _make_mel_filterbank(n_ceps, fs, framesize, freq_max):
 
     return filterbank, f_centers
     
-def mel_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window="hamming", freq_max=22050, n_ceps=22):
-    """
-    Calculate Mel-scale spectrogram
-    
-    Parameters:
-      x: ndarray
-        input signal
-      framesize: int
-        framesize
-      hopsize: int
-        hopsize
-      fs: int
-        samplingrate
-    
-    Returns:
-      result: ndarray
-        mel-scaled spectrogram
+def mel_spectrogram(x, framesize=1024, hopsize=512, fs=44100, window="hamming", min_freq=0, max_freq=22050, n_mel_bands=40):
+    """ Calculate Mel-scale spectrogram
+    @param x input signal
+    @param framesize STFT frame size
+    @param hopsize STFT hop size
+    @param fs sampling rate
+    @param window type of window function
+    @param min_freq minimum frequency of mel filterbank
+    @param max_freq maximum frequency of mel filterbank
+    @param n_mel_bands number of bands of mel filterbank
+    @return (mel spectrogram, center frequencies)
     """
 
     # Spectrogram
-    S,F,T = sigspe.stft(x, framesize, hopsize, fs, window)
-    S = sp.absolute(S)
+    S,F,T = sigspe.stft_amp(x, framesize, hopsize, fs, window)
 
     # mel-spectrum
-    mel_filterbank,center_freqs = _make_mel_filterbank(n_ceps, fs, framesize, freq_max)
+    mel_filterbank,center_freqs = _make_mel_filterbank(n_mel_bands, fs, framesize, min_freq, max_freq)
     mel_spe = sp.dot(S.T, mel_filterbank.T)
 
     return mel_spe,center_freqs
 
-def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22050, n_ceps=13, preemp=False):
+def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", min_freq=0, max_freq=22050, n_mel_bands=40, n_ceps=13, preemp=False):
+    """ Calculate MFCC
+    @param x input signal
+    @param framesize STFT frame size
+    @param hopsize STFT hop size
+    @param fs sampling rate
+    @param window type of window function
+    @param min_freq minimum frequency of mel filterbank
+    @param max_freq maximum frequency of mel filterbank
+    @param n_mel_bands number of channels of mel filterbank
+    @param n_ceps number of coefficients
+    @param preemp flag for using pre-emphasis
+    @return (MFCC coefficients, center frequencies)
     """
-    Calculate MFCC
-    
-    Parameters:
-      x: ndarray
-        input signal
-      framesize: int
-        framesize
-      hopsize: int
-        hopsize
-      fs: int
-        samplingrate
-      n_ceps: int
-        number of dimensions of MFCC
-    
-    Returns:
-      result: ndarray
-        mfcc
-    """
+
     # プリエンファシス
     if preemp:
         coef = 0.97
@@ -115,8 +90,8 @@ def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22
         xemp = x
 
     # mel-scale spectrogram
-    mel_spe,center_freqs = mel_spectrogram(xemp, framesize, hopsize, fs, window, max_freq, n_ceps)
-    mel_spe = sp.log(mel_spe+1e-10)
+    mel_spe,center_freqs = mel_spectrogram(xemp, framesize, hopsize, fs, window, min_freq, max_freq, n_mel_bands)
+    mel_spe = sp.log10(mel_spe+1e-10)
 
     # DCT (ケプストラムに変換=MFCC)
     ceps = dct(mel_spe, type=2, norm="ortho", axis=-1)[:, :n_ceps]
@@ -126,6 +101,15 @@ def mfcc(x, framesize=1024, hopsize=512, fs=44100, window="hamming", max_freq=22
     ceps = feature.check_inf_2d(ceps)
 
     return ceps,center_freqs
+
+def delta_mfcc(mfccdata, n_delta=2):
+    n_frames,n_dims = mfccdata.shape
+    dmfccdata = sp.zeros( (n_frames, n_dims) )
+    for t in range(n_delta, n_frames-n_delta):
+        for n in range(1, n_delta+1):
+            dmfccdata[t] += n * (mfccdata[t+n] - mfccdata[t-n])
+    dmfccdata /= 2 * ( (sp.arange(1, n_delta+1)**2).sum() )
+    return dmfccdata
 
 def _pre_emphasis(input, coef):
     """

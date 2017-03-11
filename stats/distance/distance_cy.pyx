@@ -179,7 +179,7 @@ def corrcoef_cy(np.ndarray[double,ndim=1] x, np.ndarray[double,ndim=1] y):
     norm_x = np.sqrt(norm_x)
     norm_y = np.sqrt(norm_y)
 
-    score = numer / (norm_x * norm_y + 1e-50)
+    score = numer / (norm_x * norm_y + 1e-10)
 
     return score
 
@@ -191,54 +191,58 @@ def inv_corrcoef_cy(np.ndarray[double,ndim=1] x, np.ndarray[double,ndim=1] y):
     yinv = 1.0 / (y+1e-50)
     return 0.5 * ( corrcoef_cy(x,y) + corrcoef_cy(xinv,yinv) )
 
-def corrcoef_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
+def corrcoef_2d_rowwise_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
     """
     相関係数(2次元arrayに対する)
     """
-    RX,RY = _adjust_vector_dimensions(X, Y)
-    d = np.sum( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] ) / RX.shape[0]
+    #RX,RY = _adjust_vector_dimensions(X, Y)
+    d = np.sum( [corrcoef_cy(x, y) for x,y in zip(X,Y)] ) / X.shape[0]
     return d
 
-def corrcoef_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjust_vector_dimensions(X, Y)
-    RX = RX.T
-    RY = RY.T
-    d = np.sum( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] ) / RX.shape[0]
+def corrcoef_2d_colwise_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
+    #RX,RY = _adjust_vector_dimensions(X, Y)
+    #RX = RX.T
+    #RY = RY.T
+    XT = X.T
+    YT = Y.T
+    d = np.sum( [corrcoef_cy(x, y) for x,y in zip(XT,YT)] ) / XT.shape[0]
     return d
 
 def inv_corrcoef_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjust_vector_dimensions(X, Y)
-    d = np.mean( [inv_corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
+    #RX,RY = _adjust_vector_dimensions(X, Y)
+    d = np.mean( [inv_corrcoef_cy(x,y) for x,y in zip(X,Y)] )
     return d
 
 def inv_corrcoef_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjust_vector_dimensions(X, Y)
-    RX = RX.T
-    RY = RY.T
-    d = np.mean( [inv_corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
+    #RX,RY = _adjust_vector_dimensions(X, Y)
+    #RX = RX.T
+    #RY = RY.T
+    XT = X.T
+    YT = Y.T
+    d = np.mean( [inv_corrcoef_cy(x,y) for x,y in zip(XT,YT)] )
     return d
 
 def weighted_corrcoef_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y, np.ndarray[double,ndim=1] weight):
-    RX,RY = _adjust_vector_dimensions(X, Y)
+    #RX,RY = _adjust_vector_dimensions(X, Y)
     #if len(weight) < RX.shape[0]:
     #    weight = np.r_[weight, np.zeros(RX.shape[0]-len(weight))]
-    RX = weight[:,np.newaxis] * RX
-    RY = weight[:,np.newaxis] * RY
-    d = np.mean( [corrcoef_cy(x, y) for x,y in zip(RX,RY)] )
+    X = weight[:,np.newaxis] * X
+    Y = weight[:,np.newaxis] * Y
+    d = np.mean( [corrcoef_cy(x, y) for x,y in zip(X,Y)] )
     return d
 
 def weighted_corrcoef_2d_T_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y, np.ndarray[double,ndim=1] weight):
-    RX,RY = _adjust_vector_dimensions(X, Y)
-    RX = RX.T * weight[:,np.newaxis]
-    RY = RY.T * weight[:,np.newaxis]
-    d = np.mean( [corrcoef_cy(x,y) for x,y in zip(RX,RY)] )
+    #RX,RY = _adjust_vector_dimensions(X, Y)
+    X = X.T * weight[:,np.newaxis]
+    Y = Y.T * weight[:,np.newaxis]
+    d = np.mean( [corrcoef_cy(x,y) for x,y in zip(X,Y)] )
     return d
 
 def ccf_2d_cy(np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] Y):
-    RX,RY = _adjust_vector_dimensions(X, Y)
-    RX = RX.T
-    RY = RY.T
-    d = np.sum( [np.correlate(x,y,mode='valid') for x,y in zip(RX,RY)] ) / (RX.shape[0]*RX.shape[1])
+    #RX,RY = _adjust_vector_dimensions(X, Y)
+    XT = X.T
+    YT = Y.T
+    d = np.sum( [np.correlate(x,y,mode='valid') for x,y in zip(XT,YT)] ) / (XT.shape[0]*XT.shape[1])
     return d
 
 def dtw_dist_type1_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y, metric='cos'):

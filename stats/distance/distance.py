@@ -183,7 +183,7 @@ def dtw_dist_2d(X, Y):
 
     return D[-1, -1]
     
-def I_divergence(X, Y):
+def i_divergence(X, Y):
     """
     I-divergence
     """
@@ -193,20 +193,20 @@ def I_divergence(X, Y):
     
     return d
     
-def I_divergence_symmetry(X, Y):
+def i_divergence_symmetry(X, Y):
     d = (I_divergence(X, Y) + I_divergence(Y, X))/2.0
     
     return d
     
-def KL_divergence(X, Y):
+def kl_divergence(X, Y):
     d = ( Y * ( sp.log(Y) - sp.log(X) ) ).sum()
     return d
 
-def KL2_divergence(X, Y):
+def kl2_divergence(X, Y):
     d = 0.5 * KL_divergence(X, Y) + 0.5 * KL_divergence(Y, X)
     return d
 
-def KL_divergence_2d(X, Y):
+def kl_divergence_2d(X, Y):
     """
     KL-divergence
     """
@@ -216,7 +216,7 @@ def KL_divergence_2d(X, Y):
     
     return d
     
-def KL2_divergence_2d(X, Y):
+def kl2_divergence_2d(X, Y):
     """
     symmetric KL divergence (KL2)
 
@@ -226,14 +226,14 @@ def KL2_divergence_2d(X, Y):
     
     return d
 
-def JS_divergence(X, Y):
+def js_divergence(X, Y):
     RX,RY = _adjust_vector_dimensions(X, Y)
 
     M = 0.5 * (RX+RY)
     d = 0.5 * ( KL_divergence(RX, M) + KL_divergence(RY, M) )
     return d
     
-def IS_divergence(X, Y):
+def is_divergence(X, Y):
     """
     板倉斎藤距離
     """
@@ -243,7 +243,7 @@ def IS_divergence(X, Y):
     
     return d
     
-def IS_divergence_symmetry(X, Y):
+def is_divergence_symmetry(X, Y):
     d = (IS_divergence(X, Y) + IS_divergence(Y, X))/2.0
     
     return d
@@ -272,7 +272,7 @@ def beta_divergence(X, Y, b):
     return d
     
 
-def KL_divergence_gauss(gmm_prm1, gmm_prm2):
+def kl_divergence_gauss(gmm_prm1, gmm_prm2):
     """
     Calculate KL divergence (Gauss distribution vs Gauss distribution)
     
@@ -299,7 +299,7 @@ def KL_divergence_gauss(gmm_prm1, gmm_prm2):
     
     return score
 
-def KL2_divergence_gauss(gmm_prm1, gmm_prm2):
+def kl2_divergence_gauss(gmm_prm1, gmm_prm2):
     """
     Calculate KL divergence (Gauss distribution vs Gauss distribution)
     

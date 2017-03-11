@@ -7,7 +7,7 @@ GaPNMF cython implementation
 cimport cython
 import numpy as np
 cimport numpy as np
-from ymh_mir.stats import GIG_cy
+from pylufia.stats import GIG_cy
 
 
 class GaPNMF_cy():

@@ -7,6 +7,7 @@ signal __init__.py
 """
 
 from .fft import *
+from .stft import *
 from .cepstrum import *
 from .cqt import *
 from .cqt_oct import *

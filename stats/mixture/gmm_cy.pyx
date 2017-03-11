@@ -4,7 +4,7 @@
 ============================================================
 @file   gmm_cy.pyx
 @date   2014/05/07
-@author sasai
+@author stfate
 
 @brief Gaussian Mixture Model
 
@@ -15,7 +15,7 @@ import numpy as np
 cimport numpy as np
 import scipy.linalg as linalg
 import scipy.misc as spmisc
-from ymh_mir.stats.cluster import *
+from pylufia.stats.cluster import *
 
 
 class GMM_cy():
@@ -124,7 +124,7 @@ class GMM_cy():
             # covars
             for c from 0 <= c < n_components:
                 post = self.responsibilities[:,c]
-                avg_cov = np.dot(post * features.T, features) / (post.sum() + 10 * cls.EPS)
+                avg_cov = np.dot(post * features.T, features) / (post.sum() + 10 * self.EPS)
                 mu = self.means[c][np.newaxis]
                 self.covars[c] = (avg_cov - np.dot(mu.T, mu)) + self.min_covar * np.eye(n_dims)
 
@@ -143,9 +143,8 @@ class GMM_cy():
         データXに対するモデルの尤度を計算する
         """
         log_prob,responsibilities = self._compute_responsibility(X, self.means, self.covars, self.weights, self.min_covar)
-        L = log_prob.sum()
 
-        return L
+        return log_prob.sum()
 
     def predict_cluster(self, X):
         """
@@ -167,10 +166,19 @@ class GMM_cy():
                 cv_chol = linalg.cholesky(self.covars[c] + self.min_covar * np.eye(n_dim), lower=True)
             cv_log_det = 2 * np.log( np.diagonal(cv_chol) ).sum()
             cv_sol = linalg.solve_triangular(cv_chol, (X-self.means[c]).T, lower=True ).T
-            log_prob[:,c] = -0.5 * ( (cv_sol**2).sum(1) + n_dim * np.log(2*np.pi) + cv_log_det )
+            log_prob[:,c] = -0.5 * ( (cv_sol**2).sum(1) + n_dims * np.log(2*np.pi) + cv_log_det )
             log_prob[:,c] = np.log(self.weights[c]) + log_prob[:,c]
 
-        return log_prob
+        post_prob = sp.exp(log_prob)
+
+        return post_prob
+
+    def posterior_prob(self, X):
+        """
+        事後確率の計算
+        """
+        lprob,res = self._compute_responsibility(X, self.means, self.covars, self.weights, self.min_covar)
+        return res
 
     def save(self, dirname):
         import json
@@ -192,23 +200,39 @@ class GMM_cy():
         fn_out = os.path.join(dirname, "params.json")
         json.dump( params, open(fn_out, "w") )
 
-    @classmethod
-    def load(cls, dirname):
+    #@classmethod
+    #def load(cls, dirname):
+    #    import json
+    #    import os
+    #    params = json.load( open( os.path.join(dirname, "params.json") ) )
+    #    model = cls()
+    #    model.n_obs = params["n_obs"]
+    #    model.n_dims = params["n_dims"]
+    #    model.n_components = params["n_components"]
+    #    model.n_iter = params["n_iter"]
+    #    model.min_covar = params["min_covar"]
+    #    model.init = params["init"]
+    #    model.responsibilities = params["responsibitilies"]
+    #    model.weights = params["weights"]
+    #    model.means = params["means"]
+    #    model.covars = params["covars"]
+    #    return model
+
+    def load(self, dirname):
         import json
         import os
         params = json.load( open( os.path.join(dirname, "params.json") ) )
-        model = cls()
-        model.n_obs = params["n_obs"]
-        model.n_dims = params["n_dims"]
-        model.n_components = params["n_components"]
-        model.n_iter = params["n_iter"]
-        model.min_covar = params["min_covar"]
-        model.init = params["init"]
-        model.responsibilities = params["responsibitilies"]
-        model.weights = params["weights"]
-        model.means = params["means"]
-        model.covars = params["covars"]
-        return model
+        self.n_obs = params["n_obs"]
+        self.n_dims = params["n_dims"]
+        self.n_components = params["n_components"]
+        self.n_iter = params["n_iter"]
+        self.min_covar = params["min_covar"]
+        self.init = params["init"]
+        self.responsibilities = params["responsibitilies"]
+        self.weights = params["weights"]
+        self.means = params["means"]
+        self.covars = params["covars"]
+        return self
 
     def _compute_responsibility(self, np.ndarray[double,ndim=2] X, np.ndarray[double,ndim=2] means,
                                 np.ndarray[double,ndim=3] covars, np.ndarray[double,ndim=1] weights, double min_covar=1e-7):
