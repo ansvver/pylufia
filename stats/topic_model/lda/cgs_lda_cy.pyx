@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-cgs_lda_cy.pyx
+gibbs_lda_cy.pyx
 
 Collapsed Gibbs SamplingによるLDA(Cython実装)
 """
@@ -14,7 +14,7 @@ import scipy.sparse as sp_sparse
 import time #perfmeas
 
 
-class CGSLDA_cy():
+class CgsLda_cy():
     """
     Inputs:
         documents: 学習に用いる文書集合のbag-of-words特徴量[n_docs,n_words]

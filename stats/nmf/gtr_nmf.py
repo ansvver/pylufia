@@ -15,7 +15,7 @@ from pylufia.stats import Gamma
 import time
 
 
-class GTRNMF():
+class GtrNmf():
     def __init__(self, X, options):
         self.X = X / X.mean()
         self.nF,self.nT = self.X.shape

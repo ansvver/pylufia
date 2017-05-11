@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-cgs_lda.py
+gibbs_lda.py
 
 Collapsed Gibbs SamplingによるLDA
 """
@@ -10,7 +10,7 @@ import scipy as sp
 import scipy.sparse as sp_sparse
 
 
-class CGSLDA():
+class CgsLda():
     """
     Inputs:
         documents: 学習に用いる文書集合のbag-of-words特徴量[n_docs,n_words]

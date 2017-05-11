@@ -13,7 +13,7 @@ import scipy as sp
 from pylufia.stats import GIG_cy
 
 
-class GaPNMF():
+class GapNmf():
     def __init__(self, X, aw=0.1, bw=0.1, ah=0.1, bh=0.1, alpha=1.0, c=1.0, K=100, smoothness=100, criterion=0.0001):
         self.X = X / X.mean()
         self.nF,self.nT = self.X.shape

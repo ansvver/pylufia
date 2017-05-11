@@ -8,6 +8,7 @@ CQTの実装
 
 import scipy as sp
 from .fft import *
+from .stft import *
 
 
 def make_cqt_kernels(framesize, fs, n_cq, n_per_semitone, fmin, n_wavs=30):
@@ -31,19 +32,19 @@ def make_cqt_kernels(framesize, fs, n_cq, n_per_semitone, fmin, n_wavs=30):
         
     return kernels, freqs
     
-def cqt(x, framesize=8192, hopsize=1024, fs=44100, window="hann", n_cq=88, n_per_semitone=1, fmin=60.0):
+def cqt(x, framesize=8192, hopsize=1024, fs=44100, window="hamming", n_cq=88, n_per_semitone=1, fmin=60.0):
     """
     CQT計算
     
     kernelとスペクトログラムの乗算を行列演算で一気にやってしまえば高速化されるが
     大量のメモリを食うようになる．
     """
-    x_zpad = sp.r_[sp.zeros(framesize/2), x, sp.zeros(framesize/2)]
+    x_zpad = sp.r_[sp.zeros( int(framesize/2) ), x, sp.zeros( int(framesize/2) )]
     
     kernels,freqs = make_cqt_kernels(framesize, fs, n_cq, n_per_semitone, fmin)
     kernels = kernels.astype(float)
     
-    X,F,T = stft(x_zpad, framesize, hopsize, fs, window)
+    X,F,T = stft(x_zpad, framesize, hopsize, fs, window, "complex")
     X = X.astype(complex).T
     
     CQ = sp.zeros( (X.shape[0], n_cq), dtype=complex)

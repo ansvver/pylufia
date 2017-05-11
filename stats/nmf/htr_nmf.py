@@ -13,7 +13,7 @@ import itertools
 
 import time
 
-class HTRNMF():
+class HtrNmf():
     """
     _update*_bruteの方だと正しく動いてそうだが，
     _update*の方はバグがありそう．array演算の次元まわりか？

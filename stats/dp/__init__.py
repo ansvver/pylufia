@@ -13,7 +13,7 @@
 #
 #-------------------------------------------------------------------------------
 
-from .dp import *
+from .dtw import *
 # import pyximport
 # import os
 # import numpy
@@ -50,4 +50,4 @@ from .dp import *
 #         os.environ['CFLAGS'] = ' -I' + numpy.get_include()
 
 #     pyximport.install()
-from .dp_cy import *
+from .dtw_cy import *
