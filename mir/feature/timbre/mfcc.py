@@ -3,8 +3,8 @@
 import scipy as sp
 import scipy.signal as sp_sig
 from scipy.fftpack.realtransforms import dct
-import ymh_mir.signal.spectral as sigspe
-import ymh_mir.mir.feature as feature
+import pylufia.signal.spectral as sigspe
+import pylufia.mir.feature as feature
 
 
 def _make_mel_filterbank(n_mel_bands, fs, framesize, min_freq, max_freq):

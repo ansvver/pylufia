@@ -418,7 +418,7 @@ def dtw_dist_type3_cy(np.ndarray[double, ndim=2] X, np.ndarray[double, ndim=2] Y
     return D[-1, -1]
 
 def KL_divergence_cy(X, Y):
-    d =(Y*(np.log(Y+1e-10)-np.log(X+1e-10))).sum()
+    d = ( Y * ( np.log(Y+1e-10) - np.log(X+1e-10) ) ).sum()
     return d
 
 def KL2_divergence_cy(X, Y):
@@ -429,9 +429,9 @@ def KL_divergence_2d_cy(X, Y):
     """
     KL-divergence
     """
-    RX,RY = _adjust_vector_dimensions(X, Y)
+    #RX,RY = _adjust_vector_dimensions(X, Y)
     
-    d = ( (RY*(np.log(RY+1e-10)-np.log(RX+1e-10))).sum(1) ).mean()
+    d = ( ( Y*( np.log(Y+1e-10) - np.log(X+1e-10) ) ).sum(1) ).mean()
     
     return d
     

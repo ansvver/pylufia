@@ -2,20 +2,20 @@
 
 """
 @file text_reader.py
-@brief
+@brief 
 @author ふぇいと (@stfate)
 
 @description
 
 """
 
-def loadtxt(fname):
-    txtdata = ""
+class TextReader:
+    def __init__(self, fn, encoding="utf-8"):
+        self.open(fn, encoding)
 
-    with open(fname, "r", encoding="utf-8") as fid:
-        for line in fid:
-            # txtdata += line.decode("utf-8")
-            txtdata += line
-    # txtdata = txtdata.encode("utf-8")
+    def open(self, fn, encoding="utf-8"):
+        self.fi = open(fn, "r", encoding=encoding)
 
-    return txtdata
+    def read(self):
+        for _l in self.fi:
+            yield _l

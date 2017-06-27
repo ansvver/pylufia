@@ -11,7 +11,7 @@ import cython
 import numpy as np
 cimport numpy as np
 import scipy.spatial.distance as spdist
-import pylufia.stats.distance as distance
+import ymh_mir.stats.distance as distance
 
 
 def dtw_cy(seq1, seq2):
@@ -27,22 +27,29 @@ def dtw_cy(seq1, seq2):
     
     seq1 = np.array(seq1).astype(np.double)
     seq2 = np.array(seq2).astype(np.double)
+    cdef long n_frames1 = len(seq1)
+    cdef long n_frames2 = len(seq2)
     
-    cdef np.ndarray[double,ndim=2] seq1_mat = np.resize( seq1, ( len(seq2),len(seq1) ) ).T
-    cdef np.ndarray[double,ndim=2] seq2_mat = np.resize( seq2, ( len(seq1),len(seq2) ) )
+    cdef np.ndarray[double,ndim=2] seq1_mat = np.resize( seq1, ( n_frames2,n_frames1 ) ).T
+    cdef np.ndarray[double,ndim=2] seq2_mat = np.resize( seq2, ( n_frames1,n_frames2 ) )
     
     cdef np.ndarray[double,ndim=2] mismatch_mat = np.absolute(seq1_mat-seq2_mat)
     mismatch_idx = np.where(mismatch_mat != 0)
     mismatch_mat[ mismatch_idx[0],mismatch_idx[1] ] = 1
     
-    cost_mat = np.zeros( ( len(seq1),len(seq2) ) )
+    cdef np.ndarray[double,ndim=2] cost_mat = np.zeros( ( n_frames1,n_frames2 ), dtype=float )
     cost_mat[0,0] = mismatch_mat[0,0]*mismatch_penalty
-    for i in range( 1, len(seq1) ):
+    cdef int i,j
+    #for i in range( 1, n_frames1 ):
+    for i from 1 <= i < n_frames1:
         cost_mat[i,0] = cost_mat[i-1,0] + move_penalty + mismatch_mat[i,0]*mismatch_penalty
-    for j in range( 1, len(seq2) ):
+    #for j in range( 1, n_frames2 ):
+    for j from 1 <= j < n_frames2:
         cost_mat[0,j] = cost_mat[0,j-1] + move_penalty + mismatch_mat[0,j]*mismatch_penalty
-    for i in range( 1, len(seq1) ):
-        for j in range( 1, len(seq2) ):
+    #for i in range( 1, n_frames1 ):
+    for i from 1 <= i < n_frames1:
+        #for j in range( 1, n_frames2 ):
+        for j from 1 <= j < n_frames2:
             cost_s = cost_mat[i-1,j-1] + mismatch_mat[i,j]*mismatch_penalty
             cost_h = cost_mat[i,j-1] + move_penalty + mismatch_mat[i,j]*mismatch_penalty
             cost_v = cost_mat[i-1,j] + move_penalty + mismatch_mat[i,j]*mismatch_penalty
@@ -50,7 +57,8 @@ def dtw_cy(seq1, seq2):
             
     path_mat = _trace_optimal_path(cost_mat)
 
-    confidence = 1.0 / (cost_mat[-1,-1] + 1e-5)
+    n_frames_mean = (n_frames1 + n_frames2)/2
+    confidence = 1.0 / (cost_mat[-1,-1]/n_frames_mean + 1e-5)
     
     return cost_mat,path_mat,confidence
     
@@ -68,18 +76,22 @@ def dtw_with_distfunc_cy(feature1, feature2, metric="cos"):
     else:
         metric = distance.euclid_dist_cy
     
-    cdef int n_frames1 = feature1.shape[0]
-    cdef int n_frames2 = feature2.shape[0]
+    cdef long n_frames1 = feature1.shape[0]
+    cdef long n_frames2 = feature2.shape[0]
     cdef np.ndarray[double,ndim=2] cost_mat = np.zeros((n_frames1,n_frames2))
-    cdef int i,j
+    cdef long i,j
     cdef double cost_s,cost_h,cost_v
     cost_mat[0,0] = distfunc(feature1[0],feature2[0])*mismatch_penalty
-    for i in range(1, n_frames1):
+    #for i in range(1, n_frames1):
+    for i from 1 <= i < n_frames1:
         cost_mat[i,0] = cost_mat[i-1,0] + move_penalty + distfunc(feature1[i],feature2[0])*mismatch_penalty
-    for j in range(1, n_frames2):
+    #for j in range(1, n_frames2):
+    for j from 1 <= j < n_frames2:
         cost_mat[0,j] = cost_mat[0,j-1] + move_penalty + distfunc(feature1[0],feature2[j])*mismatch_penalty
-    for i in range(1, n_frames1):
-        for j in range(1, n_frames2):
+    #for i in range(1, n_frames1):
+    for i from 1 <= i < n_frames1:
+        #for j in range(1, n_frames2):
+        for j from 1 <= j < n_frames2:
             cost_s = cost_mat[i-1,j-1] + distfunc(feature1[i],feature2[j])*mismatch_penalty
             cost_h = cost_mat[i,j-1] + move_penalty + distfunc(feature1[i],feature2[j])*mismatch_penalty
             cost_v = cost_mat[i-1,j] + move_penalty + distfunc(feature1[i],feature2[j])*mismatch_penalty
@@ -87,7 +99,8 @@ def dtw_with_distfunc_cy(feature1, feature2, metric="cos"):
             
     path_mat = _trace_optimal_path(cost_mat)
     
-    confidence = 1.0 / (cost_mat[-1,-1] + 1e-5)
+    n_frames_mean = (n_frames1 + n_frames2)/2
+    confidence = 1.0 / (cost_mat[-1,-1]/n_frames_mean + 1e-5)
     
     return cost_mat,path_mat,confidence
     
@@ -96,12 +109,12 @@ cdef _trace_optimal_path(np.ndarray[double,ndim=2] cost_mat):
     cost matrixから最短経路の探索
     """
     is_terminal = False
-    cdef int n_row = cost_mat.shape[0]
-    cdef int n_col = cost_mat.shape[1]
-    cdef np.ndarray[int,ndim=2] path_mat = np.zeros( (n_row,n_col), dtype=int )
+    cdef long n_row = cost_mat.shape[0]
+    cdef long n_col = cost_mat.shape[1]
+    cdef np.ndarray[long,ndim=2] path_mat = np.zeros( (n_row,n_col), dtype=long )
     path_mat[-1,-1] = 1
-    cdef int i = cost_mat.shape[0]-1
-    cdef int j = cost_mat.shape[1]-1
+    cdef long i = cost_mat.shape[0]-1
+    cdef long j = cost_mat.shape[1]-1
     while is_terminal == False:
         if i > 0 and j > 0:
             idx = np.argmin( np.array([cost_mat[i-1,j],cost_mat[i,j-1],cost_mat[i-1,j-1]]) )
