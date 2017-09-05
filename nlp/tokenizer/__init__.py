@@ -4,7 +4,7 @@
 """
 @package
 @brief
-@author ふぇいと (@stfate)
+@author stfate
 """
 
 from .tokenizer import *

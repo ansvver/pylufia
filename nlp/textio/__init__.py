@@ -10,3 +10,4 @@
 """
 
 from .text_reader import *
+from .text_writer import *

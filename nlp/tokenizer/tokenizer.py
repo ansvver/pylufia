@@ -3,7 +3,7 @@
 """
 @package tokenizer.py
 @brief sentence tokenizer
-@author ふぇいと (@stfate)
+@author stfate
 """
 
 import MeCab

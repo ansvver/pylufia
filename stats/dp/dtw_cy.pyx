@@ -22,9 +22,6 @@ def dtw_cy(seq1, seq2):
     コストに距離関数を入れるよりも挿入誤りには頑健なので
     PDF-MusicXMLマッチングにはこちらのほうが向いていると思われる
     """
-    cdef double move_penalty = 1.0
-    cdef double mismatch_penalty = 3.0
-    
     seq1 = np.array(seq1).astype(np.double)
     seq2 = np.array(seq2).astype(np.double)
     cdef long n_frames1 = len(seq1)
@@ -38,21 +35,21 @@ def dtw_cy(seq1, seq2):
     mismatch_mat[ mismatch_idx[0],mismatch_idx[1] ] = 1
     
     cdef np.ndarray[double,ndim=2] cost_mat = np.zeros( ( n_frames1,n_frames2 ), dtype=float )
-    cost_mat[0,0] = mismatch_mat[0,0]*mismatch_penalty
+    cost_mat[0,0] = mismatch_mat[0,0]
     cdef int i,j
     #for i in range( 1, n_frames1 ):
     for i from 1 <= i < n_frames1:
-        cost_mat[i,0] = cost_mat[i-1,0] + move_penalty + mismatch_mat[i,0]*mismatch_penalty
+        cost_mat[i,0] = cost_mat[i-1,0] + mismatch_mat[i,0]
     #for j in range( 1, n_frames2 ):
     for j from 1 <= j < n_frames2:
-        cost_mat[0,j] = cost_mat[0,j-1] + move_penalty + mismatch_mat[0,j]*mismatch_penalty
+        cost_mat[0,j] = cost_mat[0,j-1] + mismatch_mat[0,j]
     #for i in range( 1, n_frames1 ):
     for i from 1 <= i < n_frames1:
         #for j in range( 1, n_frames2 ):
         for j from 1 <= j < n_frames2:
-            cost_s = cost_mat[i-1,j-1] + mismatch_mat[i,j]*mismatch_penalty
-            cost_h = cost_mat[i,j-1] + move_penalty + mismatch_mat[i,j]*mismatch_penalty
-            cost_v = cost_mat[i-1,j] + move_penalty + mismatch_mat[i,j]*mismatch_penalty
+            cost_s = cost_mat[i-1,j-1] + mismatch_mat[i,j]
+            cost_h = cost_mat[i,j-1] + mismatch_mat[i,j]
+            cost_v = cost_mat[i-1,j] + mismatch_mat[i,j]
             cost_mat[i,j] = min(cost_s,cost_h,cost_v)
             
     path_mat = _trace_optimal_path(cost_mat)
@@ -66,9 +63,6 @@ def dtw_with_distfunc_cy(feature1, feature2, metric="cos"):
     """
     連続値特徴ベクトル同士のDP (cos類似度などの類似尺度をコストとする)
     """
-    cdef double move_penalty = 1.0
-    cdef double mismatch_penalty = 3.0
-    
     if metric == "cos":
         distfunc = distance.cos_dist_cy
     elif metric == "euclid":
@@ -81,20 +75,20 @@ def dtw_with_distfunc_cy(feature1, feature2, metric="cos"):
     cdef np.ndarray[double,ndim=2] cost_mat = np.zeros((n_frames1,n_frames2))
     cdef long i,j
     cdef double cost_s,cost_h,cost_v
-    cost_mat[0,0] = distfunc(feature1[0],feature2[0])*mismatch_penalty
+    cost_mat[0,0] = distfunc(feature1[0],feature2[0])
     #for i in range(1, n_frames1):
     for i from 1 <= i < n_frames1:
-        cost_mat[i,0] = cost_mat[i-1,0] + move_penalty + distfunc(feature1[i],feature2[0])*mismatch_penalty
+        cost_mat[i,0] = cost_mat[i-1,0] + distfunc(feature1[i],feature2[0])
     #for j in range(1, n_frames2):
     for j from 1 <= j < n_frames2:
-        cost_mat[0,j] = cost_mat[0,j-1] + move_penalty + distfunc(feature1[0],feature2[j])*mismatch_penalty
+        cost_mat[0,j] = cost_mat[0,j-1] + distfunc(feature1[0],feature2[j])
     #for i in range(1, n_frames1):
     for i from 1 <= i < n_frames1:
         #for j in range(1, n_frames2):
         for j from 1 <= j < n_frames2:
-            cost_s = cost_mat[i-1,j-1] + distfunc(feature1[i],feature2[j])*mismatch_penalty
-            cost_h = cost_mat[i,j-1] + move_penalty + distfunc(feature1[i],feature2[j])*mismatch_penalty
-            cost_v = cost_mat[i-1,j] + move_penalty + distfunc(feature1[i],feature2[j])*mismatch_penalty
+            cost_s = cost_mat[i-1,j-1] + distfunc(feature1[i],feature2[j])
+            cost_h = cost_mat[i,j-1] + distfunc(feature1[i],feature2[j])
+            cost_v = cost_mat[i-1,j] + distfunc(feature1[i],feature2[j])
             cost_mat[i,j] = min(cost_s,cost_h,cost_v)
             
     path_mat = _trace_optimal_path(cost_mat)
